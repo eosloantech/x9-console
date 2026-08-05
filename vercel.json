@@ -2,8 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/bff.js": {
+      "includeFiles": "presets/**"
+    }
+  },
   "rewrites": [
     { "source": "/bff/:path*", "destination": "/api/bff" },
-    { "source": "/((?!api|assets).*)", "destination": "/index.html" }
+    { "source": "/((?!api|assets|eos-logo).*)", "destination": "/index.html" }
   ]
 }
