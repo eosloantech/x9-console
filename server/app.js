@@ -1,7 +1,7 @@
 // X9 QRCode Console — BFF (app shared between the local server and Vercel functions)
 // Writes: always through the official API. Listing: MongoDB read-only (the API has no list endpoint).
 import express from 'express';
-import { MongoClient } from 'mongodb';
+import { MongoClient, Binary } from 'mongodb';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -87,6 +87,55 @@ const asNumber = (v) =>
   : v && typeof v.low === 'number' ? v.low + v.high * 2 ** 32
   : Number(v);
 
+// hex id → legacy Java Binary (subtype 3): reverse each 8-byte half.
+function binaryFromId(id) {
+  const buf = Buffer.from(id, 'hex');
+  const legacy = Buffer.concat([
+    Buffer.from(buf.subarray(0, 8)).reverse(),
+    Buffer.from(buf.subarray(8, 16)).reverse(),
+  ]);
+  return new Binary(legacy, 3);
+}
+
+// Maps a raw Mongo document to the API's detail shape — used as a read
+// fallback when the backend refuses to serve a QR it already stored
+// (e.g. legacy notifications whose expectedDate now fails validation).
+function docToDetail(d) {
+  const camelNet = (cfg) => ({
+    ...(cfg.routing_number ? { routingNumber: cfg.routing_number } : {}),
+    ...(cfg.account_number ? { accountNumber: cfg.account_number } : {}),
+    ...(cfg.protection_type ? { protectionType: cfg.protection_type } : {}),
+    ...(cfg.wallet_address ? { walletAddress: cfg.wallet_address } : {}),
+  });
+  return {
+    id: idFromBinary(d._id),
+    status: d.status,
+    revision: d.revision,
+    createdAt: d.created_at,
+    revisedAt: d.revised_at,
+    sentAt: d.sent_at,
+    validUntil: d.valid_until,
+    creditor: d.creditor ? {
+      name: d.creditor.name, phone: d.creditor.phone, email: d.creditor.email,
+      MCC: d.creditor.merchant_category_code, address: d.creditor.address,
+    } : undefined,
+    bill: d.bill ? {
+      description: d.bill.description,
+      paymentTiming: d.bill.payment_timing,
+      ...(d.bill.amount_due ? { amountDue: { amount: asNumber(d.bill.amount_due.amount), currency: d.bill.amount_due.currency } } : {}),
+      ...(d.bill.tip ? { tip: d.bill.tip } : {}),
+    } : undefined,
+    paymentNotification: d.payment_notification?.kind ?? d.payment_notification,
+    paymentMethods: (d.payment_method || []).map((m) => ({
+      currency: m.currency,
+      amount: asNumber(m.amount),
+      validUntil: m.valid_until,
+      networks: Object.fromEntries(Object.entries(m.networks || {}).map(([k, v]) => [k, camelNet(v)])),
+    })),
+    qrCode: d.qrcode_emv,
+  };
+}
+
 async function proxy(res, apiPath, init = {}) {
   try {
     const r = await fetch(`${API}${apiPath}`, {
@@ -133,8 +182,26 @@ app.get('/bff/qrcodes', async (_req, res) => {
   }
 });
 
-app.get('/bff/qrcodes/:id', (req, res) =>
-  proxy(res, `/api/v1/payment-request/${req.params.id}`));
+app.get('/bff/qrcodes/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const r = await fetch(`${API}/api/v1/payment-request/${id}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const text = await r.text();
+    if (r.status !== 400) {
+      return res.status(r.status).type(r.headers.get('content-type') || 'application/json').send(text);
+    }
+    // 400 on a stored QR (e.g. legacy expectedDate) — serve it from Mongo.
+    if (/^[0-9A-F]{32}$/.test(id)) {
+      const doc = await (await collection()).findOne({ _id: binaryFromId(id) }, { projection: { history: 0 } });
+      if (doc) return res.json(docToDetail(doc));
+    }
+    res.status(400).type('application/json').send(text);
+  } catch (e) {
+    res.status(502).json({ title: 'Backend unavailable', detail: String(e.message || e) });
+  }
+});
 
 app.post('/bff/qrcodes', (req, res) =>
   proxy(res, '/api/v1/payment-request', { method: 'POST', body: JSON.stringify(req.body) }));
