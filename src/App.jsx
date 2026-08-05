@@ -7,6 +7,7 @@ import DetailView from './views/DetailView.jsx';
 import DecoderView from './views/DecoderView.jsx';
 import PlacardView from './views/PlacardView.jsx';
 import PayerView from './views/PayerView.jsx';
+import AdminView from './views/AdminView.jsx';
 
 function HealthDot() {
   const [up, setUp] = useState(null);
@@ -168,6 +169,7 @@ export default function App() {
             <NavLink to="/new" className={navCls}>Create</NavLink>
             <NavLink to="/decoder" className={navCls}>Decoder</NavLink>
             <NavLink to="/pay" className={navCls}>Pay</NavLink>
+            {getToken() && <NavLink to="/admin" className={navCls}>Admin</NavLink>}
           </nav>
           <span className="flex items-center gap-4">
             <Identity />
@@ -184,6 +186,7 @@ export default function App() {
           <Route path="/qr/:id/placard" element={<PlacardView />} />
           <Route path="/decoder" element={<DecoderView />} />
           <Route path="/pay" element={<PayerView />} />
+          <Route path="/admin" element={<AdminView />} />
         </Routes>
       </main>
 

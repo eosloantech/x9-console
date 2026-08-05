@@ -40,6 +40,7 @@ export const api = {
   health: () => req('/bff/health'),
   payerFetch: (emv) => req('/bff/payer/fetch', { method: 'POST', body: JSON.stringify({ emv }) }),
   payerPay: (body) => req('/bff/payer/pay', { method: 'POST', body: JSON.stringify(body) }),
+  adminTesters: () => req('/bff/admin/testers'),
 };
 
 // Currency → decimal places (minor units). Open by design: defaults to 2.

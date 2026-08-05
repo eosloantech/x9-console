@@ -329,6 +329,25 @@ app.post('/bff/payer/pay', async (req, res) => {
   }
 });
 
+// ---- admin: tester registry (console admin token ONLY — email users get 403)
+app.get('/bff/admin/testers', async (req, res) => {
+  const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (!TOKEN || bearer !== TOKEN) {
+    return res.status(403).json({ title: 'Admins only', detail: 'This area requires the console admin password.' });
+  }
+  try {
+    const list = await (await testersCollection()).find({}).sort({ lastSeen: -1 }).limit(500).toArray();
+    res.json({
+      total: list.length,
+      testers: list.map((t) => ({
+        email: t.email, firstSeen: t.firstSeen, lastSeen: t.lastSeen, requests: t.requests || 0,
+      })),
+    });
+  } catch (e) {
+    res.status(500).json({ title: 'Failed to read testers', detail: String(e.message || e) });
+  }
+});
+
 app.get('/bff/presets', async (_req, res) => {
   try {
     const files = (await readdir(PRESETS_DIR)).filter((f) => /^qr-.*-createqr\.json$/.test(f));
