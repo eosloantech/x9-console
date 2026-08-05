@@ -98,7 +98,7 @@ export default function PayerView() {
   return (
     <div className="max-w-md mx-auto">
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Pagador</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Pagar</h1>
         <p className="mt-2 text-ink/55">
           Simule o app do banco: escaneie o QR, revise a cobrança e pague. A confirmação
           envia a notificação de pagamento assinada, que fica registrada no QR.

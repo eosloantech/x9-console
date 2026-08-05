@@ -97,7 +97,7 @@ export default function App() {
             <NavLink to="/" end className={navCls}>QR Codes</NavLink>
             <NavLink to="/new" className={navCls}>Criar</NavLink>
             <NavLink to="/decoder" className={navCls}>Decoder</NavLink>
-            <NavLink to="/pagador" className={navCls}>Pagador</NavLink>
+            <NavLink to="/pagar" className={navCls}>Pagar</NavLink>
           </nav>
           <HealthDot />
         </div>
@@ -110,7 +110,7 @@ export default function App() {
           <Route path="/qr/:id" element={<DetailView />} />
           <Route path="/qr/:id/plaquinha" element={<PlacardView />} />
           <Route path="/decoder" element={<DecoderView />} />
-          <Route path="/pagador" element={<PayerView />} />
+          <Route path="/pagar" element={<PayerView />} />
         </Routes>
       </main>
 
