@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, NavLink, Link } from 'react-router-dom';
-import { api, setToken, setEmail } from './api.js';
+import { api, setToken, setEmail, getEmail, getToken } from './api.js';
 import ListView from './views/ListView.jsx';
 import CreateView from './views/CreateView.jsx';
 import DetailView from './views/DetailView.jsx';
@@ -24,6 +24,18 @@ function HealthDot() {
     <span className="flex items-center gap-2 text-xs font-semibold text-ink/50">
       <span className={`w-2 h-2 rounded-full ${up == null ? 'bg-ink/20' : up ? 'bg-petrol-500' : 'bg-red-500'} ${up ? 'animate-pulse' : ''}`} />
       {up == null ? 'checking…' : up ? 'API online' : 'API offline'}
+    </span>
+  );
+}
+
+function Identity() {
+  const who = getEmail() || (getToken() ? 'admin' : '');
+  if (!who) return null;
+  const signOut = () => { setToken(''); setEmail(''); location.href = '/'; };
+  return (
+    <span className="hidden sm:flex items-center gap-2 text-xs text-mute max-w-[180px]">
+      <span className="truncate" title={who}>{who}</span>
+      <button onClick={signOut} className="font-bold text-petrol-600 hover:text-petrol-800 shrink-0">Sign out</button>
     </span>
   );
 }
@@ -157,7 +169,10 @@ export default function App() {
             <NavLink to="/decoder" className={navCls}>Decoder</NavLink>
             <NavLink to="/pay" className={navCls}>Pay</NavLink>
           </nav>
-          <HealthDot />
+          <span className="flex items-center gap-4">
+            <Identity />
+            <HealthDot />
+          </span>
         </div>
       </header>
 

@@ -232,7 +232,9 @@ app.post('/bff/payer/pay', async (req, res) => {
         transactionId,
       },
       ...(info ? { payer: { info } } : {}),
-      expectedDate: new Date(Date.now() + 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      // The backend validates expectedDate against "now" on every read of the
+      // QR, so a short horizon makes paid QRs unreadable minutes later.
+      expectedDate: new Date(Date.now() + 30 * 24 * 3600_000).toISOString().replace(/\.\d{3}Z$/, 'Z'),
     };
     const jws = await signJws(notification, crypto.randomUUID());
     const r = await fetch(`${API}/pub/api/v1/payment-notification`, {
