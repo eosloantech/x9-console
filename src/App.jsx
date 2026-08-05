@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, NavLink, Link } from 'react-router-dom';
-import { api, getToken, setToken } from './api.js';
+import { api, setToken, setEmail } from './api.js';
 import ListView from './views/ListView.jsx';
 import CreateView from './views/CreateView.jsx';
 import DetailView from './views/DetailView.jsx';
@@ -65,47 +65,73 @@ function BottomNav() {
   );
 }
 
-function TokenGate({ onOk }) {
+function AccessGate({ mode, onOk }) {
+  // mode 'email': testers sign in with just their email (it doubles as the
+  // credential and is logged server-side). Anything without an '@' is treated
+  // as the admin token, so the same field serves both.
   const [value, setValue] = useState('');
   const [bad, setBad] = useState(false);
+  const emailMode = mode === 'email';
+
   const submit = async (e) => {
     e.preventDefault();
-    setToken(value.trim());
+    const v = value.trim();
+    if (v.includes('@')) { setEmail(v.toLowerCase()); setToken(''); }
+    else { setToken(v); setEmail(''); }
     try { await api.health(); onOk(); }
-    catch (err) { setBad(true); if (err.status === 401) setToken(''); }
+    catch (err) { setBad(true); if (err.status === 401) { setToken(''); setEmail(''); } }
   };
+
   return (
     <div className="mesh-bg min-h-screen flex items-center justify-center p-6">
       <form onSubmit={submit} className="card p-8 w-full max-w-sm text-center">
         <img src="/eos-logo.svg" alt="Eos Loan" className="h-8 w-auto mx-auto" />
         <h1 className="font-display text-2xl font-extrabold text-navy mt-4">X9 Console</h1>
-        <p className="text-sm text-ink/50 mt-1">This console is protected. Enter your access token.</p>
+        <p className="text-sm text-ink/50 mt-1">
+          {emailMode
+            ? 'Enter your email to try the payment QR codes. No password needed.'
+            : 'This console is protected. Enter your access token.'}
+        </p>
         <input
-          type="password" value={value} onChange={(e) => { setValue(e.target.value); setBad(false); }}
-          placeholder="access token" autoFocus
-          className={`mt-5 w-full px-4 py-2.5 rounded-xl border text-sm font-mono outline-none transition-colors ${bad ? 'border-red-400' : 'border-ink/15 focus:border-petrol-500'}`}
+          type={emailMode ? 'email' : 'password'}
+          value={value} onChange={(e) => { setValue(e.target.value); setBad(false); }}
+          placeholder={emailMode ? 'you@company.com' : 'access token'} autoFocus
+          className={`mt-5 w-full px-4 py-2.5 rounded-xl border text-sm outline-none transition-colors ${emailMode ? '' : 'font-mono'} ${bad ? 'border-red-400' : 'border-ink/15 focus:border-petrol-500'}`}
         />
-        {bad && <div className="mt-2 text-xs font-semibold text-red-600">Invalid token — please try again.</div>}
+        {bad && <div className="mt-2 text-xs font-semibold text-red-600">
+          {emailMode ? 'That doesn’t look like a valid email — please try again.' : 'Invalid token — please try again.'}
+        </div>}
         <button type="submit" disabled={!value.trim()}
           className="mt-4 w-full px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 disabled:opacity-40 transition-colors">
-          Sign in
+          {emailMode ? 'Start testing' : 'Sign in'}
         </button>
+        {emailMode && (
+          <p className="mt-3 text-[11px] text-ink/35">
+            Your email identifies your test session — that&apos;s all we use it for.
+          </p>
+        )}
       </form>
     </div>
   );
 }
 
 export default function App() {
-  // 'checking' | 'locked' | 'open' — the gate only shows if the BFF requires a token (401).
+  // 'checking' | 'locked' | 'open' — the gate only shows if the BFF requires access (401).
   const [gate, setGate] = useState('checking');
+  const [gateMode, setGateMode] = useState('token');
   useEffect(() => {
     api.health().then(
       () => setGate('open'),
-      (e) => setGate(e.status === 401 ? 'locked' : 'open'),
+      (e) => {
+        if (e.status === 401) {
+          setGateMode(e.problem?.mode || 'token');
+          setGate('locked');
+        } else setGate('open');
+      },
     );
   }, []);
   if (gate === 'checking') return <div className="mesh-bg min-h-screen" />;
-  if (gate === 'locked') return <TokenGate onOk={() => setGate('open')} />;
+  if (gate === 'locked') return <AccessGate mode={gateMode} onOk={() => setGate('open')} />;
 
   return (
     <div className="mesh-bg min-h-screen">

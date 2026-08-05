@@ -6,7 +6,39 @@ import { ProblemBox } from '../components.jsx';
 
 /* PAYER-side simulator: scans the QR (camera via BarcodeDetector, native in
    Chrome) or takes a pasted EMV, fetches the signed payload the way a banking
-   app would, and sends the signed payment notification. */
+   app would, and sends the signed payment notification. On top of the QR's
+   real X9 rails, it offers presentation-level channels — Eos Balance and the
+   platform wallet (Apple Pay on iOS, Google Pay on Android, Card elsewhere);
+   settlement always rides one of the QR's underlying networks. */
+
+const WALLET =
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ? { channel: 'apple-pay', label: 'Apple Pay' } :
+  /Android/.test(navigator.userAgent) ? { channel: 'google-pay', label: 'Google Pay' } :
+  { channel: 'card', label: 'Card' };
+
+function GoogleG() {
+  return (
+    <svg viewBox="0 0 18 18" className="w-5 h-5" aria-hidden="true">
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z" />
+      <path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.05l3.01-2.33z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+    </svg>
+  );
+}
+
+function WalletIcon({ channel }) {
+  if (channel === 'apple-pay') {
+    // U+F8FF renders as the Apple logo exactly on the platforms that show Apple Pay
+    return <span className="text-base leading-none" aria-hidden="true"></span>;
+  }
+  if (channel === 'google-pay') return <GoogleG />;
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5 text-navy" fill="currentColor" aria-hidden="true">
+      <path d="M2 8a2 2 0 012-2h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8zm2 2v2h16v-2H4z" />
+    </svg>
+  );
+}
 
 export default function PayerView() {
   const [stage, setStage] = useState('scan');   // scan | review | done
@@ -95,12 +127,38 @@ export default function PayerView() {
   const p = data?.payload;
   const bill = p?.bill;
   const methods = p?.paymentMethods || [];
-  const method = methods[methodIdx];
-  const baseAmount = method?.amount ?? bill?.amountDue?.amount ?? 0;
-  const currency = method?.currency ?? bill?.amountDue?.currency;
+
+  // Settlement rail for the synthetic channels: prefer a US bank rail, else
+  // the first network the QR offers.
+  const bankMethod = methods.find((m) =>
+    Object.keys(m.networks || {}).some((n) => /^(fednow|rtp|ach)$/i.test(n)));
+  const settleMethod = bankMethod || methods[0];
+  const settleNetwork = settleMethod
+    ? (Object.keys(settleMethod.networks || {}).find((n) => /^(fednow|rtp|ach)$/i.test(n))
+        || Object.keys(settleMethod.networks || {})[0])
+    : null;
+
+  // Payment options: Eos Balance + platform wallet on top of the real rails.
+  const options = p ? [
+    { kind: 'eos', channel: 'eos-balance', label: 'Eos Balance', sub: 'Instant · fee-free',
+      amount: bill?.amountDue?.amount ?? settleMethod?.amount, currency: bill?.amountDue?.currency ?? settleMethod?.currency,
+      network: settleNetwork },
+    { kind: 'wallet', channel: WALLET.channel, label: WALLET.label, sub: 'Via your device wallet',
+      amount: bill?.amountDue?.amount ?? settleMethod?.amount, currency: bill?.amountDue?.currency ?? settleMethod?.currency,
+      network: settleNetwork },
+    ...methods.map((m) => ({
+      kind: 'network', channel: undefined,
+      label: Object.keys(m.networks || {})[0], sub: m.currency,
+      amount: m.amount, currency: m.currency,
+      network: Object.keys(m.networks || {})[0],
+    })),
+  ] : [];
+
+  const selected = options[methodIdx] || options[0];
+  const baseAmount = selected?.amount ?? 0;
+  const currency = selected?.currency;
   const tipAmount = tipPct ? Math.round(baseAmount * tipPct / 1000) : 0;
   const total = baseAmount + tipAmount;
-  const network = method ? Object.keys(method.networks || {})[0] : null;
 
   const pay = async () => {
     setProblem(null); setBusy(true);
@@ -110,8 +168,9 @@ export default function PayerView() {
         amount: total,
         ...(tipAmount ? { tipAmount } : {}),
         currency,
-        network,
-        payerInfo: 'console simulator',
+        network: selected.network,
+        channel: selected.channel,
+        payerInfo: selected.label,
       });
       setReceipt(r);
       setStage('done');
@@ -127,8 +186,9 @@ export default function PayerView() {
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Pay</h1>
         <p className="mt-2 text-ink/55">
-          Simulate the banking app: scan the QR, review the payment request and pay. Confirming
-          sends the signed payment notification, which is recorded on the QR.
+          Simulate the banking app: scan the QR, review the payment request and pay
+          with Eos Balance, your device wallet or the QR&apos;s own rails. Confirming
+          sends the signed notification and settles the QR as Paid.
         </p>
       </motion.div>
 
@@ -214,16 +274,33 @@ export default function PayerView() {
               <div>
                 <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-2">Pay with</div>
                 <div className="space-y-2">
-                  {methods.map((m, i) => {
-                    const net = Object.keys(m.networks || {})[0];
-                    return (
-                      <button key={i} onClick={() => setMethodIdx(i)}
-                        className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${i === methodIdx ? 'border-petrol-500 ring-2 ring-petrol-100' : 'border-line hover:border-petrol-300'}`}>
-                        <span className="text-sm font-bold">{net} <span className="text-mute font-semibold">· {m.currency}</span></span>
-                        <span className="text-sm font-semibold">{formatAmount(m.amount, m.currency)}</span>
-                      </button>
-                    );
-                  })}
+                  {options.map((o, i) => (
+                    <button key={i} onClick={() => setMethodIdx(i)}
+                      className={`w-full flex items-center justify-between rounded-xl border px-4 py-3 text-left transition-all ${i === methodIdx ? 'border-petrol-500 ring-2 ring-petrol-100' : 'border-line hover:border-petrol-300'}`}>
+                      <span className="flex items-center gap-3 min-w-0">
+                        {o.kind === 'eos' && (
+                          <span className="shrink-0 w-9 h-6 rounded-md border border-line bg-white flex items-center justify-center p-0.5">
+                            <img src="/eos-logo.svg" alt="" className="w-full h-full object-contain" />
+                          </span>
+                        )}
+                        {o.kind === 'wallet' && (
+                          <span className={`shrink-0 w-9 h-6 rounded-md flex items-center justify-center ${o.channel === 'apple-pay' ? 'bg-ink text-white' : 'border border-line bg-white'}`}>
+                            <WalletIcon channel={o.channel} />
+                          </span>
+                        )}
+                        {o.kind === 'network' && (
+                          <span className="shrink-0 w-9 h-6 rounded-md bg-petrol-50 flex items-center justify-center text-[9px] font-bold uppercase tracking-wider text-petrol-700">
+                            {String(o.label).slice(0, 3)}
+                          </span>
+                        )}
+                        <span className="min-w-0">
+                          <span className="block text-sm font-bold truncate">{o.label}</span>
+                          <span className="block text-[11px] text-mute truncate">{o.sub}</span>
+                        </span>
+                      </span>
+                      <span className="text-sm font-semibold shrink-0 ml-3">{formatAmount(o.amount, o.currency)}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -249,10 +326,18 @@ export default function PayerView() {
             className="card p-8 mt-6 text-center">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}
               className="mx-auto w-16 h-16 rounded-full bg-[#EAF6DC] text-[#4C7A1F] flex items-center justify-center text-3xl">✓</motion.div>
-            <h2 className="font-display font-extrabold text-2xl text-navy mt-4">Payment notified</h2>
-            <p className="text-sm text-ink/55 mt-1">
-              The signed notification was accepted and recorded on the QR (the revision bumps).
-              The merchant sees the payment in the console and confirms the credit by marking it <b>Paid</b>.
+            <h2 className="font-display font-extrabold text-2xl text-navy mt-4">
+              {receipt?.status === 'PAID' ? 'Payment completed' : 'Payment notified'}
+            </h2>
+            {receipt?.status === 'PAID' && (
+              <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full border bg-[#D6E7FA] text-navy border-[#B7D4F5] text-xs font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" /> Paid
+              </span>
+            )}
+            <p className="text-sm text-ink/55 mt-2">
+              {receipt?.status === 'PAID'
+                ? 'The signed notification was accepted and the QR settled — its status is now Paid in the console.'
+                : 'The signed notification was accepted and recorded on the QR. The merchant confirms the credit by marking it Paid.'}
             </p>
             <div className="mt-4 font-mono text-xs text-mute break-all">{receipt?.transactionId}</div>
             <div className="mt-6 flex gap-3 justify-center">

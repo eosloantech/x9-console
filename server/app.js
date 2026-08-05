@@ -21,15 +21,48 @@ function collection() {
   return clientPromise.then((c) => c.db(process.env.MONGO_DB || 'x9-qrcode').collection('qrcodes'));
 }
 
+const EMAIL_GATE = String(process.env.EMAIL_GATE || '').toLowerCase() === 'true';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function testersCollection() {
+  clientPromise ||= new MongoClient(MONGO_URL).connect();
+  return clientPromise.then((c) => c.db(process.env.MONGO_DB || 'x9-qrcode').collection('console_testers'));
+}
+
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
-// Optional auth: setting CONSOLE_TOKEN protects all of /bff with a Bearer token.
+// Access control for /bff:
+// - CONSOLE_TOKEN set        → Bearer token grants full (admin) access.
+// - EMAIL_GATE=true          → a valid email in the x-console-email header also
+//   grants access; every email is logged to Mongo so you can see who tested.
+// - Neither set              → open (local development).
 app.use('/bff', (req, res, next) => {
-  if (!TOKEN) return next();
-  const got = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  if (got === TOKEN) return next();
-  res.status(401).json({ title: 'Unauthorized', detail: 'Provide the console access token.' });
+  if (!TOKEN && !EMAIL_GATE) return next();
+
+  const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  if (TOKEN && bearer === TOKEN) return next();
+
+  if (EMAIL_GATE) {
+    const email = String(req.headers['x-console-email'] || '').trim().toLowerCase();
+    if (EMAIL_RE.test(email) && email.length <= 254) {
+      req.consoleEmail = email;
+      testersCollection()
+        .then((c) => c.updateOne(
+          { email },
+          { $set: { email, lastSeen: new Date() }, $setOnInsert: { firstSeen: new Date() }, $inc: { requests: 1 } },
+          { upsert: true },
+        ))
+        .catch(() => {});
+      return next();
+    }
+  }
+
+  res.status(401).json({
+    title: 'Unauthorized',
+    detail: EMAIL_GATE ? 'Enter your email to access the console.' : 'Provide the console access token.',
+    mode: EMAIL_GATE ? 'email' : 'token',
+  });
 });
 
 // ---- helpers ---------------------------------------------------------------
@@ -171,14 +204,24 @@ app.post('/bff/payer/fetch', async (req, res) => {
   }
 });
 
-// Confirms the payment: builds the PaymentNotificationData, signs it and sends it.
-// The backend records the notification and moves the QR to PAYMENT_INITIATED.
+// Confirms the payment: sends the signed PaymentNotificationData, then flips the
+// QR to PAID via the management API so the console reflects the settled payment.
+// `channel` is the presentation-level method (eos-balance / apple-pay / google-pay /
+// card) — settlement always rides the QR's underlying X9 network.
+const CHANNEL_PREFIX = {
+  'eos-balance': 'EOS', 'apple-pay': 'APAY', 'google-pay': 'GPAY', card: 'CARD',
+};
+
 app.post('/bff/payer/pay', async (req, res) => {
   try {
-    const { qrcodeId, amount, tipAmount, currency, network, payerInfo } = req.body || {};
+    const { qrcodeId, amount, tipAmount, currency, network, channel, payerInfo } = req.body || {};
     if (!qrcodeId || !amount || !currency || !network) {
       return res.status(400).json({ title: 'Required fields', detail: 'qrcodeId, amount, currency and network' });
     }
+    const prefix = CHANNEL_PREFIX[channel] || 'SIM';
+    const transactionId = `${prefix}.${network}.${crypto.randomUUID().slice(0, 12)}`;
+    const info = [req.consoleEmail, payerInfo].filter(Boolean).join(' · ').slice(0, 140);
+
     const notification = {
       payment: {
         qrcodeId,
@@ -186,9 +229,9 @@ app.post('/bff/payer/pay', async (req, res) => {
         ...(tipAmount ? { tipAmount } : {}),
         currency,
         network,
-        transactionId: `SIM.${network}.${crypto.randomUUID().slice(0, 12)}`,
+        transactionId,
       },
-      ...(payerInfo ? { payer: { info: String(payerInfo).slice(0, 140) } } : {}),
+      ...(info ? { payer: { info } } : {}),
       expectedDate: new Date(Date.now() + 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z'),
     };
     const jws = await signJws(notification, crypto.randomUUID());
@@ -202,7 +245,16 @@ app.post('/bff/payer/pay', async (req, res) => {
       let problem; try { problem = JSON.parse(text); } catch { problem = { title: `HTTP ${r.status}`, detail: text.slice(0, 300) }; }
       return res.status(r.status).json(problem);
     }
-    res.json({ ok: true, transactionId: notification.payment.transactionId });
+
+    // Settle: mark the QR as PAID (payee-side management call).
+    const paid = await fetch(`${API}/api/v1/payment-request/${qrcodeId}/status-update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'PAID', network, endToEndId: transactionId }),
+    });
+    const status = paid.ok ? 'PAID' : 'NOTIFIED';
+
+    res.json({ ok: true, transactionId, status });
   } catch (e) {
     res.status(502).json({ title: 'Failed to notify payment', detail: String(e.body || e.message || e) });
   }

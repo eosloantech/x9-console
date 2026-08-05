@@ -1,11 +1,18 @@
 // BFF client. All writes go through the official API via the proxy;
 // the listing comes from Mongo (read-only) because the API has no list endpoint.
+// Access: a single stored credential — an email (tester) or the admin token.
 export const getToken = () => localStorage.getItem('x9-console-token') || '';
 export const setToken = (t) => t ? localStorage.setItem('x9-console-token', t) : localStorage.removeItem('x9-console-token');
+export const getEmail = () => localStorage.getItem('x9-console-email') || '';
+export const setEmail = (e) => e ? localStorage.setItem('x9-console-email', e) : localStorage.removeItem('x9-console-email');
 
 async function req(path, init) {
   const token = getToken();
-  const auth = token ? { Authorization: `Bearer ${token}` } : {};
+  const email = getEmail();
+  const auth = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(email ? { 'x-console-email': email } : {}),
+  };
   const r = await fetch(path, {
     ...(init || {}),
     headers: { 'Content-Type': 'application/json', ...auth, ...(init?.headers || {}) },
