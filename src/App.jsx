@@ -24,7 +24,7 @@ function HealthDot() {
   return (
     <span className="flex items-center gap-2 text-xs font-semibold text-ink/50">
       <span className={`w-2 h-2 rounded-full ${up == null ? 'bg-ink/20' : up ? 'bg-petrol-500' : 'bg-red-500'} ${up ? 'animate-pulse' : ''}`} />
-      {up == null ? 'checking…' : up ? 'API online' : 'API offline'}
+      <span className="hidden md:inline">{up == null ? 'checking…' : up ? 'API online' : 'API offline'}</span>
     </span>
   );
 }
@@ -187,11 +187,11 @@ export default function App() {
       </svg>
 
       <header className="sticky top-0 z-20 backdrop-blur-md bg-paper/80 border-b border-ink/10">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-5 md:px-6 h-14 md:h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
             <img src="/eos-logo.svg" alt="Eos Loan" className="h-7 w-auto" />
-            <span className="w-px h-7 bg-line" aria-hidden="true" />
-            <div className="leading-none">
+            <span className="hidden md:block w-px h-7 bg-line" aria-hidden="true" />
+            <div className="hidden md:block leading-none">
               <span className="font-display text-lg font-extrabold text-navy">X9 Console</span>
               <span className="block text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-mute">Payment QR Codes · X9.150</span>
             </div>
@@ -223,8 +223,14 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-28 md:pb-8 text-xs text-mute/80">
-        Eos Loan · NMLS #2744537 · Confidential — X9.150 Console · writes go through the official API (:8080) · listing read from MongoDB
+      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-28 md:pb-8 text-center md:text-left">
+        <div className="md:hidden flex items-center justify-center gap-2 mb-2">
+          <img src="/eos-logo.svg" alt="" className="h-4 w-auto opacity-70" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-mute">X9 Console · X9.150</span>
+        </div>
+        <div className="text-[11px] md:text-xs text-mute/80">
+          Eos Loan · NMLS #2744537 · Confidential — X9.150 Console · writes go through the official API · listing read from MongoDB
+        </div>
       </footer>
 
       <BottomNav />
