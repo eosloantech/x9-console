@@ -8,7 +8,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const API = process.env.X9_API_URL || 'http://localhost:8080';
-const MONGO_URL = process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/?replicaSet=x9-qrcode&directConnection=true';
+// tolera espaços e aspas colados por engano na env var
+const MONGO_URL = (process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/?replicaSet=x9-qrcode&directConnection=true')
+  .trim().replace(/^["']|["']$/g, '');
 const PRESETS_DIR = process.env.PRESETS_DIR || path.resolve(__dirname, '../presets');
 const TOKEN = process.env.CONSOLE_TOKEN || null;
 
