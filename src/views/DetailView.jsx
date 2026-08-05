@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount, allowedActions, isOwner, networkLabel, STATUS_META } from '../api.js';
-import { Trash2, Share2, Check } from 'lucide-react';
+import { Trash2, Share2, Check, Wallet } from 'lucide-react';
 import { QRImage, downloadQR, StatusBadge, CopyButton, Field, ProblemBox } from '../components.jsx';
 
 const NETWORKS = ['FedNow', 'RTP', 'ACH', 'Bitcoin', 'Ethereum', 'Solana', 'Polygon', 'Base', 'XRP', 'Arc'];
@@ -110,6 +110,10 @@ export default function DetailView() {
           )}
           {actions.length > 0 && (
             <>
+            <Link to={`/pay/${qr.id}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-navy text-white hover:bg-petrol-800 transition-all active:scale-[0.98]">
+              <Wallet className="w-4 h-4" /> Pay
+            </Link>
             <button onClick={doShare} disabled={busy}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold bg-white border border-petrol-300 text-petrol-700 hover:bg-petrol-50 transition-all active:scale-[0.98]">
               {shared ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
