@@ -1,0 +1,30 @@
+# Deploy automático na Vercel a cada push na main.
+# Substitui a integração Git nativa do Vercel (o handshake do GitHub App
+# nunca completou para esta conta) — o deploy roda aqui, via CLI + token.
+#
+# Segredo necessário (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN — token criado em vercel.com/account/settings/tokens
+#
+# Os IDs abaixo identificam o projeto mas não dão acesso a nada sem o token.
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+
+env:
+  VERCEL_ORG_ID: team_Y8ErgVyEV7Rn0TQ3m8TQEEq9
+  VERCEL_PROJECT_ID: prj_FS0orcKTAwMo1hWuWsaYr5k1otbh
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Deploy (production)
+        run: npx vercel@latest deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
