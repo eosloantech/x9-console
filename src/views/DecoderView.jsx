@@ -21,7 +21,7 @@ export default function DecoderView() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-medium tracking-tight">Decoder EMV</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Decoder EMV</h1>
         <p className="mt-2 text-ink/55 max-w-2xl">
           Cole uma string EMV e o backend a decodifica — se o QR existir nesta base,
           volta a cobrança completa.

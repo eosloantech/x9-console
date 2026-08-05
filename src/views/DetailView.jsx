@@ -68,7 +68,7 @@ export default function DetailView() {
       <div className="flex items-start justify-between gap-6 flex-wrap">
         <div>
           <Link to="/" className="text-xs font-bold text-ink/40 hover:text-ink transition-colors">← QR Codes</Link>
-          <h1 className="font-display text-4xl font-medium tracking-tight mt-1">{qr.creditor?.name}</h1>
+          <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy mt-1">{qr.creditor?.name}</h1>
           <div className="mt-2 flex items-center gap-3">
             <StatusBadge status={qr.status} size="lg" />
             <span className="text-sm text-ink/45">rev {qr.revision} · criado {new Date(qr.createdAt).toLocaleString('pt-BR')}</span>
@@ -94,7 +94,7 @@ export default function DetailView() {
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           className="card p-6 flex flex-col items-center">
-          <QRImage emv={emv} size={300} />
+          <QRImage emv={emv} size={300} logo />
           <Link to={`/qr/${qr.id}/plaquinha`}
             className="mt-4 w-full text-center px-4 py-2.5 rounded-xl bg-ink text-paper text-sm font-bold hover:bg-ink/85 transition-all active:scale-[0.98]">
             Plaquinha de balcão →
@@ -113,7 +113,7 @@ export default function DetailView() {
         {/* dados */}
         <div className="space-y-5">
           <div className="card p-5">
-            <h2 className="font-display text-xl mb-4">Cobrança</h2>
+            <h2 className="font-display text-xl font-bold text-navy mb-4">Cobrança</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Valor">
                 <span className="font-display text-2xl">
@@ -133,7 +133,7 @@ export default function DetailView() {
           </div>
 
           <div className="card p-5">
-            <h2 className="font-display text-xl mb-4">Meios de pagamento</h2>
+            <h2 className="font-display text-xl font-bold text-navy mb-4">Meios de pagamento</h2>
             <div className="space-y-3">
               {(qr.paymentMethods || []).map((m, i) => (
                 <div key={i} className="rounded-xl border border-ink/10 p-4">
@@ -156,7 +156,7 @@ export default function DetailView() {
           </div>
 
           <div className="card p-5">
-            <h2 className="font-display text-xl mb-4">Identificadores</h2>
+            <h2 className="font-display text-xl font-bold text-navy mb-4">Identificadores</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="QR Code id"><span className="font-mono text-xs">{qr.id}</span></Field>
               <Field label="Location id"><span className="font-mono text-xs">{qr.location?.id || qr.locationId || '—'}</span></Field>

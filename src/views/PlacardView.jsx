@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
-import { QRImage, QRMotif, ProblemBox } from '../components.jsx';
+import { QRImage, ProblemBox } from '../components.jsx';
 
 export default function PlacardView() {
   const { id } = useParams();
@@ -36,19 +36,21 @@ export default function PlacardView() {
         transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
         className="placard mx-auto max-w-[420px] bg-white rounded-[28px] border border-ink/10 shadow-sm overflow-hidden print:shadow-none print:border-ink/20"
       >
-        {/* faixa superior */}
-        <div className="bg-ink px-8 pt-7 pb-6 text-paper">
-          <QRMotif className="w-10 h-[18px] text-petrol-300" />
-          <h1 className="font-display text-[26px] leading-tight mt-3">{qr.creditor?.name}</h1>
+        {/* faixa superior — gradiente assinatura Eos */}
+        <div className="eos-band px-8 pt-7 pb-6 text-white">
+          <span className="inline-flex items-center bg-white rounded-lg px-2.5 py-1.5">
+            <img src="/eos-logo.svg" alt="Eos Loan" className="h-5 w-auto" />
+          </span>
+          <h1 className="font-display font-extrabold text-[26px] leading-tight mt-3">{qr.creditor?.name}</h1>
           {qr.bill?.description && (
-            <p className="text-paper/55 text-sm mt-0.5">{qr.bill.description}</p>
+            <p className="text-white/65 text-sm mt-0.5">{qr.bill.description}</p>
           )}
         </div>
 
-        {/* QR */}
+        {/* QR com a marca no centro (correção de erro H) */}
         <div className="px-8 py-7 flex flex-col items-center">
-          <div className="rounded-2xl border-[3px] border-ink p-3.5">
-            <QRImage emv={qr.qrCode} size={252} />
+          <div className="rounded-2xl border-[3px] border-navy p-3.5">
+            <QRImage emv={qr.qrCode} size={252} logo />
           </div>
 
           <div className="mt-6 text-center">
@@ -71,13 +73,18 @@ export default function PlacardView() {
         </div>
 
         {/* rodapé */}
-        <div className="border-t border-dashed border-ink/15 px-8 py-4 flex items-center justify-between">
-          <div className="flex flex-wrap gap-1.5">
-            {rails.map((r) => (
-              <span key={r} className="px-2 py-0.5 rounded-md bg-petrol-50 text-petrol-700 text-[9px] font-bold uppercase tracking-widest">{r}</span>
-            ))}
+        <div className="border-t border-dashed border-line px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-1.5">
+              {rails.map((r) => (
+                <span key={r} className="px-2 py-0.5 rounded-md bg-[#D6E7FA] text-navy text-[9px] font-bold uppercase tracking-widest">{r}</span>
+              ))}
+            </div>
+            <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-mute/70">X9.150</span>
           </div>
-          <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-ink/30">X9.150</span>
+          <div className="mt-2 text-[8px] font-semibold tracking-wide text-mute/70">
+            Eos Loan · NMLS #2744537
+          </div>
         </div>
       </motion.div>
 

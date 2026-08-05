@@ -44,11 +44,13 @@ export function formatAmount(minor, currency) {
   return `${v.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) })} ${currency}`;
 }
 
+// Cores de status na paleta Eos: verde = positivo, dourado = destaque,
+// azul = concluído, vermelho #E5573B = alerta.
 export const STATUS_META = {
-  ACTIVE:            { label: 'Ativo',     cls: 'bg-petrol-100 text-petrol-800 border-petrol-200' },
-  PAYMENT_INITIATED: { label: 'Iniciado',  cls: 'bg-amber-100 text-amber-800 border-amber-200' },
-  PAID:              { label: 'Pago',      cls: 'bg-blue-100 text-blue-800 border-blue-200' },
-  CANCELLED:         { label: 'Cancelado', cls: 'bg-red-100 text-red-700 border-red-200' },
+  ACTIVE:            { label: 'Ativo',     cls: 'bg-[#EAF6DC] text-[#4C7A1F] border-[#C9E7A4]' },
+  PAYMENT_INITIATED: { label: 'Iniciado',  cls: 'bg-[#FFF4D1] text-[#8A6A00] border-[#FBE39B]' },
+  PAID:              { label: 'Pago',      cls: 'bg-[#D6E7FA] text-[#2F5496] border-[#B7D4F5]' },
+  CANCELLED:         { label: 'Cancelado', cls: 'bg-[#FBE5E0] text-[#B23E27] border-[#F3C4BA]' },
 };
 
 // Máquina de estados (STATE-MACHINE.md): só ofereça transições válidas.

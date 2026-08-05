@@ -2,19 +2,33 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { STATUS_META } from './api.js';
 
-/* ---------- QR renderizado no browser a partir do EMV ---------- */
-export function QRImage({ emv, size = 220, className = '' }) {
+/* ---------- QR renderizado no browser a partir do EMV ----------
+   Com `logo`, sobe a correção de erro para H (30%) e centra a marca Eos —
+   o QR continua legível porque a área coberta fica bem abaixo da redundância. */
+export function QRImage({ emv, size = 220, logo = false, className = '' }) {
   const canvasRef = useRef(null);
   useEffect(() => {
     if (emv && canvasRef.current) {
       QRCode.toCanvas(canvasRef.current, emv, {
-        width: size, margin: 2, errorCorrectionLevel: 'M',
+        width: size, margin: 2, errorCorrectionLevel: logo ? 'H' : 'M',
         color: { dark: '#101312', light: '#FFFFFF' },
       });
     }
-  }, [emv, size]);
+  }, [emv, size, logo]);
   if (!emv) return null;
-  return <canvas ref={canvasRef} className={`rounded-xl ${className}`} aria-label="QR code de pagamento" />;
+  const canvas = <canvas ref={canvasRef} className={`rounded-xl ${className}`} aria-label="QR code de pagamento" />;
+  if (!logo) return canvas;
+  return (
+    <div className="relative inline-block leading-none">
+      {canvas}
+      <span
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg border border-line flex items-center justify-center"
+        style={{ width: size * 0.24, height: size * 0.24 * 0.62, padding: size * 0.018 }}
+      >
+        <img src="/eos-logo.svg" alt="" className="w-full h-full object-contain" />
+      </span>
+    </div>
+  );
 }
 
 export async function downloadQR(emv, name, fmt) {

@@ -34,8 +34,8 @@ export default function ListView() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl md:text-5xl font-medium tracking-tight">
-          Seus QR codes<span className="text-petrol-600">.</span>
+        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-navy">
+          Seus QR codes<span className="text-gold">.</span>
         </h1>
         <p className="mt-2 text-ink/55 max-w-xl">
           Cada QR referencia uma cobrança viva no backend — o valor e os meios de pagamento

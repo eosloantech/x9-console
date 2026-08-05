@@ -48,7 +48,7 @@ export default function CreateView() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-medium tracking-tight">Criar QR code</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Criar QR code</h1>
         <p className="mt-2 text-ink/55 max-w-2xl">
           Escolha um cenário e ajuste o corpo da requisição — valores em <em>minor units</em>
           (2450 = US$ 24,50). O servidor valida e responde com erros campo a campo (RFC-7807).

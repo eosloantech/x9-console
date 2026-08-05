@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, NavLink, Link } from 'react-router-dom';
 import { api, getToken, setToken } from './api.js';
-import { QRMotif } from './components.jsx';
 import ListView from './views/ListView.jsx';
 import CreateView from './views/CreateView.jsx';
 import DetailView from './views/DetailView.jsx';
@@ -45,8 +44,8 @@ function TokenGate({ onOk }) {
   return (
     <div className="mesh-bg min-h-screen flex items-center justify-center p-6">
       <form onSubmit={submit} className="card p-8 w-full max-w-sm text-center">
-        <QRMotif className="w-10 h-[18px] text-petrol-600 mx-auto" />
-        <h1 className="font-display text-2xl mt-4">X9 Console</h1>
+        <img src="/eos-logo.svg" alt="Eos Loan" className="h-8 w-auto mx-auto" />
+        <h1 className="font-display text-2xl font-extrabold text-navy mt-4">X9 Console</h1>
         <p className="text-sm text-ink/50 mt-1">Este console está protegido. Informe o token de acesso.</p>
         <input
           type="password" value={value} onChange={(e) => { setValue(e.target.value); setBad(false); }}
@@ -86,10 +85,11 @@ export default function App() {
       <header className="sticky top-0 z-20 backdrop-blur-md bg-paper/80 border-b border-ink/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <QRMotif className="w-9 h-4 text-petrol-600 group-hover:text-petrol-800 transition-colors" />
+            <img src="/eos-logo.svg" alt="Eos Loan" className="h-7 w-auto" />
+            <span className="w-px h-7 bg-line" aria-hidden="true" />
             <div className="leading-none">
-              <span className="font-display text-lg font-semibold">X9 Console</span>
-              <span className="block text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-ink/40">Payment QR Codes · X9.150</span>
+              <span className="font-display text-lg font-extrabold text-navy">X9 Console</span>
+              <span className="block text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-mute">Payment QR Codes · X9.150</span>
             </div>
           </Link>
           <nav className="flex items-center gap-1">
@@ -111,8 +111,8 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-8 text-xs text-ink/35">
-        Console local · escrita via API oficial (:8080) · listagem lida do MongoDB · ANSI X9.150-2026
+      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-8 text-xs text-mute/80">
+        Eos Loan · NMLS #2744537 · Confidential — Console X9.150 · escrita via API oficial (:8080) · listagem lida do MongoDB
       </footer>
     </div>
   );
