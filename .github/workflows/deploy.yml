@@ -1,11 +1,10 @@
-# Deploy automático na Vercel a cada push na main.
-# Substitui a integração Git nativa do Vercel (o handshake do GitHub App
-# nunca completou para esta conta) — o deploy roda aqui, via CLI + token.
+# Automatic Vercel deployment on every push to main.
+# Replaces Vercel's native Git integration — the deploy runs here via CLI + token.
 #
-# Segredo necessário (Settings → Secrets and variables → Actions):
-#   VERCEL_TOKEN — token criado em vercel.com/account/settings/tokens
+# Required secret (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN — created at vercel.com/account/settings/tokens (scoped to this project)
 #
-# Os IDs abaixo identificam o projeto mas não dão acesso a nada sem o token.
+# The IDs below identify the project but grant no access without the token.
 name: Deploy to Vercel
 
 on:
