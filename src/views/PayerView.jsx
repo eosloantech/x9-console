@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, formatAmount } from '../api.js';
+import { api, formatAmount, networkLabel } from '../api.js';
 import { ProblemBox } from '../components.jsx';
 import { QrCode, Check, ShieldCheck } from 'lucide-react';
 
@@ -24,6 +24,17 @@ function GoogleG() {
       <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z" />
       <path fill="#FBBC05" d="M3.97 10.72A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.18.28-1.72V4.95H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.05l3.01-2.33z" />
       <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+    </svg>
+  );
+}
+
+function RippleIcon() {
+  // RLUSD badge: the Ripple/XRPL mark (mirrored chevrons) on the brand blue coin.
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+      <circle cx="12" cy="12" r="11" fill="#0A93EB" />
+      <path fill="#fff" d="M7.2 6.2h2.1l2.7 2.8 2.7-2.8h2.1l-3.6 3.7c-.66.68-1.74.68-2.4 0L7.2 6.2z" />
+      <path fill="#fff" d="M7.2 17.8h2.1l2.7-2.8 2.7 2.8h2.1l-3.6-3.7c-.66-.68-1.74-.68-2.4 0l-3.6 3.7z" />
     </svg>
   );
 }
@@ -164,6 +175,11 @@ export default function PayerView() {
     { kind: 'wallet', channel: WALLET.channel, label: WALLET.label, sub: 'Via your device wallet',
       amount: bill?.amountDue?.amount ?? settleMethod?.amount, currency: bill?.amountDue?.currency ?? settleMethod?.currency,
       network: settleNetwork },
+    ...(['USD', 'USDC', 'USDT', 'RLUSD'].includes(bill?.amountDue?.currency ?? settleMethod?.currency) ? [
+      { kind: 'rlusd', channel: 'rlusd', label: 'RLUSD', sub: 'Ripple · USD stablecoin', asRlusd: true,
+        amount: bill?.amountDue?.amount ?? settleMethod?.amount, currency: bill?.amountDue?.currency ?? settleMethod?.currency,
+        network: settleNetwork },
+    ] : []),
     ...methods.map((m) => ({
       kind: 'network', channel: undefined,
       label: Object.keys(m.networks || {})[0], sub: m.currency,
@@ -308,6 +324,11 @@ export default function PayerView() {
                             <img src="/eos-logo.svg" alt="" className="w-full h-full object-contain" />
                           </span>
                         )}
+                        {o.kind === 'rlusd' && (
+                          <span className="shrink-0 w-9 h-6 rounded-md border border-line bg-white flex items-center justify-center">
+                            <RippleIcon />
+                          </span>
+                        )}
                         {o.kind === 'wallet' && (
                           <span className={`shrink-0 w-9 h-6 rounded-md flex items-center justify-center ${o.channel === 'apple-pay' ? 'bg-ink text-white' : 'border border-line bg-white'}`}>
                             <WalletIcon channel={o.channel} />
@@ -323,7 +344,11 @@ export default function PayerView() {
                           <span className="block text-[11px] text-mute truncate">{o.sub}</span>
                         </span>
                       </span>
-                      <span className="text-sm font-semibold shrink-0 ml-3">{formatAmount(o.amount, o.currency)}</span>
+                      <span className="text-sm font-semibold shrink-0 ml-3">
+                        {o.asRlusd && o.currency !== 'RLUSD'
+                          ? formatAmount(o.amount, o.currency).replace(/\S+$/, 'RLUSD')
+                          : formatAmount(o.amount, o.currency)}
+                      </span>
                     </button>
                   ))}
                 </div>

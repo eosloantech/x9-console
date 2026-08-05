@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api, formatAmount, STATUS_META } from '../api.js';
+import { api, formatAmount, networkLabel, STATUS_META } from '../api.js';
 import { QRImage, StatusBadge, ProblemBox } from '../components.jsx';
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
@@ -92,7 +92,7 @@ export default function ListView() {
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {it.methods.flatMap((m) => m.networks.map((n) => (
                       <span key={m.currency + n} className="px-2 py-0.5 rounded-md bg-ink/5 text-[10px] font-bold uppercase tracking-wider text-ink/50">
-                        {n} · {m.currency}
+                        {networkLabel(n)} · {m.currency}
                       </span>
                     )))}
                   </div>

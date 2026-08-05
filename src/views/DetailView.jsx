@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, formatAmount, allowedActions, isOwner, STATUS_META } from '../api.js';
+import { api, formatAmount, allowedActions, isOwner, networkLabel, STATUS_META } from '../api.js';
 import { Trash2, Share2, Check } from 'lucide-react';
 import { QRImage, downloadQR, StatusBadge, CopyButton, Field, ProblemBox } from '../components.jsx';
 
@@ -184,7 +184,7 @@ export default function DetailView() {
                   <div className="mt-2 space-y-1.5">
                     {Object.entries(m.networks || {}).map(([net, cfg]) => (
                       <div key={net} className="flex items-center gap-2 text-xs font-mono text-ink/60">
-                        <span className="px-2 py-0.5 rounded-md bg-petrol-50 text-petrol-700 font-sans font-bold uppercase tracking-wider text-[10px]">{net}</span>
+                        <span className="px-2 py-0.5 rounded-md bg-petrol-50 text-petrol-700 font-sans font-bold uppercase tracking-wider text-[10px]">{networkLabel(net)}</span>
                         {cfg.routingNumber && <span>ABA {cfg.routingNumber} · account {cfg.accountNumber} · {cfg.protectionType}</span>}
                         {cfg.walletAddress && <span className="truncate">{cfg.walletAddress}</span>}
                       </div>

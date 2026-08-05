@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { api, formatAmount } from '../api.js';
+import { api, formatAmount, networkLabel } from '../api.js';
 import { QRImage, ProblemBox } from '../components.jsx';
 
 export default function PlacardView() {
@@ -77,7 +77,7 @@ export default function PlacardView() {
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-1.5">
               {rails.map((r) => (
-                <span key={r} className="px-2 py-0.5 rounded-md bg-[#D6E7FA] text-navy text-[9px] font-bold uppercase tracking-widest">{r}</span>
+                <span key={r} className="px-2 py-0.5 rounded-md bg-[#D6E7FA] text-navy text-[9px] font-bold uppercase tracking-widest">{networkLabel(r)}</span>
               ))}
             </div>
             <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-mute/70">X9.150</span>

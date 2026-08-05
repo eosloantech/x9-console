@@ -48,6 +48,10 @@ export const api = {
 export const OWNER_EMAIL = 'lucas@eosloan.com';
 export const isOwner = () => getEmail() === OWNER_EMAIL || !!getToken();
 
+// Network display labels — we brand the XRP Ledger rail as Ripple (we accept
+// RLUSD, not XRP the asset).
+export const networkLabel = (n) => ({ XRP: 'Ripple' }[n] || n);
+
 // Currency → decimal places (minor units). Open by design: defaults to 2.
 const DECIMALS = { USD: 2, JPY: 0, USDC: 6, RLUSD: 6, BTC: 8, ETH: 18, SOL: 9, XRP: 6 };
 

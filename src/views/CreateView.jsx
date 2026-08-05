@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, formatAmount } from '../api.js';
+import { api, formatAmount, networkLabel } from '../api.js';
 import { Utensils, CircleParking, Droplets, FlaskConical, Cloud, HeartHandshake, Globe, FileText, ChevronDown } from 'lucide-react';
 import { ProblemBox } from '../components.jsx';
 
@@ -13,7 +13,7 @@ const SCENARIOS = {
   lab:           { name: 'Medical lab',    desc: 'Invoice + USDC on Ethereum',        icon: FlaskConical, order: 4 },
   cloudprovider: { name: 'Cloud provider', desc: 'B2B invoice',                       icon: Cloud, order: 5 },
   donation:      { name: 'Donation',       desc: 'Open amount, Bitcoin only',         icon: HeartHandshake, order: 6 },
-  rlusd:         { name: 'Cross-border',   desc: 'RLUSD on the XRP Ledger',           icon: Globe, order: 7 },
+  rlusd:         { name: 'Cross-border',   desc: 'RLUSD via Ripple',           icon: Globe, order: 7 },
 };
 
 // Currency decimals for the amount input (minor units ↔ display).
@@ -190,7 +190,7 @@ export default function CreateView() {
                   const net = Object.keys(m.networks || {})[0];
                   return (
                     <span key={i} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-line bg-white text-xs font-bold">
-                      <span className="text-petrol-700 uppercase tracking-wide">{net}</span>
+                      <span className="text-petrol-700 uppercase tracking-wide">{networkLabel(net)}</span>
                       <span className="text-mute font-semibold">{formatAmount(m.amount, m.currency)}</span>
                     </span>
                   );

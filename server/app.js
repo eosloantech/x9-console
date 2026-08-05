@@ -276,7 +276,7 @@ app.post('/bff/payer/fetch', async (req, res) => {
 // `channel` is the presentation-level method (eos-balance / apple-pay / google-pay /
 // card) — settlement always rides the QR's underlying X9 network.
 const CHANNEL_PREFIX = {
-  'eos-balance': 'EOS', 'apple-pay': 'APAY', 'google-pay': 'GPAY', card: 'CARD',
+  'eos-balance': 'EOS', 'apple-pay': 'APAY', 'google-pay': 'GPAY', card: 'CARD', rlusd: 'RLUSD',
 };
 
 app.post('/bff/payer/pay', async (req, res) => {
