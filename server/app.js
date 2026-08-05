@@ -115,6 +115,97 @@ app.post('/bff/decode', (req, res) =>
 
 app.get('/bff/health', (_req, res) => proxy(res, '/actuator/health'));
 
+// ---- simulador do PAGADOR (lado Payer-PSP do X9.150) -----------------------
+// Assina via /api/v1/signature/generate (certificado demo do backend) — um
+// pagador real assinaria com o próprio certificado X9.
+
+async function signJws(body, correlationId) {
+  const r = await fetch(`${API}/api/v1/signature/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Correlation-Id': correlationId,
+      'TTL-Seconds': '300',
+    },
+    body: JSON.stringify(body),
+  });
+  const text = (await r.text()).trim();
+  if (!r.ok) throw Object.assign(new Error('sign failed'), { status: r.status, body: text });
+  return text;
+}
+
+const b64urlJson = (seg) =>
+  JSON.parse(Buffer.from(seg.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
+
+// Escaneou o QR: assina a chamada e busca o payload completo em /pub/api/v1/loc/{id}
+app.post('/bff/payer/fetch', async (req, res) => {
+  try {
+    const emv = String(req.body?.emv || '').trim();
+    const at = emv.indexOf('/loc/');
+    if (at < 0) return res.status(400).json({ title: 'EMV inválido', detail: 'não contém /loc/{id}' });
+    const locId = emv.slice(at + 5, at + 5 + 32);
+
+    const cid = crypto.randomUUID();
+    const callJws = await signJws({ qrCodeContent: Buffer.from(emv).toString('base64') }, cid);
+
+    const r = await fetch(`${API}/pub/api/v1/loc/${locId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/jose' },
+      body: callJws,
+    });
+    const respText = (await r.text()).trim();
+    if (!r.ok) {
+      let problem; try { problem = JSON.parse(respText); } catch { problem = { title: `HTTP ${r.status}`, detail: respText.slice(0, 300) }; }
+      return res.status(r.status).json(problem);
+    }
+    const [hdr, payload] = respText.split('.');
+    res.json({
+      locId,
+      correlationEchoed: b64urlJson(hdr).correlationId === cid,
+      payload: b64urlJson(payload),
+    });
+  } catch (e) {
+    res.status(502).json({ title: 'Falha ao buscar payload', detail: String(e.body || e.message || e) });
+  }
+});
+
+// Confirma o pagamento: monta a PaymentNotificationData, assina e envia.
+// O backend registra a notificação e move o QR para PAYMENT_INITIATED.
+app.post('/bff/payer/pay', async (req, res) => {
+  try {
+    const { qrcodeId, amount, tipAmount, currency, network, payerInfo } = req.body || {};
+    if (!qrcodeId || !amount || !currency || !network) {
+      return res.status(400).json({ title: 'Campos obrigatórios', detail: 'qrcodeId, amount, currency e network' });
+    }
+    const notification = {
+      payment: {
+        qrcodeId,
+        amount,
+        ...(tipAmount ? { tipAmount } : {}),
+        currency,
+        network,
+        transactionId: `SIM.${network}.${crypto.randomUUID().slice(0, 12)}`,
+      },
+      ...(payerInfo ? { payer: { info: String(payerInfo).slice(0, 140) } } : {}),
+      expectedDate: new Date(Date.now() + 60_000).toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    };
+    const jws = await signJws(notification, crypto.randomUUID());
+    const r = await fetch(`${API}/pub/api/v1/payment-notification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/jose' },
+      body: jws,
+    });
+    const text = (await r.text()).trim();
+    if (!r.ok) {
+      let problem; try { problem = JSON.parse(text); } catch { problem = { title: `HTTP ${r.status}`, detail: text.slice(0, 300) }; }
+      return res.status(r.status).json(problem);
+    }
+    res.json({ ok: true, transactionId: notification.payment.transactionId });
+  } catch (e) {
+    res.status(502).json({ title: 'Falha ao notificar pagamento', detail: String(e.body || e.message || e) });
+  }
+});
+
 app.get('/bff/presets', async (_req, res) => {
   try {
     const files = (await readdir(PRESETS_DIR)).filter((f) => /^qr-.*-createqr\.json$/.test(f));

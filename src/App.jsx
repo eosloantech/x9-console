@@ -6,6 +6,7 @@ import CreateView from './views/CreateView.jsx';
 import DetailView from './views/DetailView.jsx';
 import DecoderView from './views/DecoderView.jsx';
 import PlacardView from './views/PlacardView.jsx';
+import PayerView from './views/PayerView.jsx';
 
 function HealthDot() {
   const [up, setUp] = useState(null);
@@ -96,6 +97,7 @@ export default function App() {
             <NavLink to="/" end className={navCls}>QR Codes</NavLink>
             <NavLink to="/new" className={navCls}>Criar</NavLink>
             <NavLink to="/decoder" className={navCls}>Decoder</NavLink>
+            <NavLink to="/pagador" className={navCls}>Pagador</NavLink>
           </nav>
           <HealthDot />
         </div>
@@ -108,6 +110,7 @@ export default function App() {
           <Route path="/qr/:id" element={<DetailView />} />
           <Route path="/qr/:id/plaquinha" element={<PlacardView />} />
           <Route path="/decoder" element={<DecoderView />} />
+          <Route path="/pagador" element={<PayerView />} />
         </Routes>
       </main>
 

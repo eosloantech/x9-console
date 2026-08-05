@@ -31,6 +31,8 @@ export const api = {
   decode: (emv) => req('/bff/decode', { method: 'POST', body: JSON.stringify({ qrCode: emv }) }),
   presets: () => req('/bff/presets'),
   health: () => req('/bff/health'),
+  payerFetch: (emv) => req('/bff/payer/fetch', { method: 'POST', body: JSON.stringify({ emv }) }),
+  payerPay: (body) => req('/bff/payer/pay', { method: 'POST', body: JSON.stringify(body) }),
 };
 
 // Moedas → casas decimais (minor units). Aberto por design: default 2.
