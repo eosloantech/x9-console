@@ -1,5 +1,5 @@
-// Cliente do BFF. Toda escrita passa pela API oficial via proxy;
-// a listagem vem do Mongo (read-only) porque a API não tem endpoint de lista.
+// BFF client. All writes go through the official API via the proxy;
+// the listing comes from Mongo (read-only) because the API has no list endpoint.
 export const getToken = () => localStorage.getItem('x9-console-token') || '';
 export const setToken = (t) => t ? localStorage.setItem('x9-console-token', t) : localStorage.removeItem('x9-console-token');
 
@@ -16,7 +16,7 @@ async function req(path, init) {
   if (!r.ok) {
     const err = new Error(data?.title || `HTTP ${r.status}`);
     err.status = r.status;
-    err.problem = data; // RFC-7807 do backend
+    err.problem = data; // RFC-7807 from the backend
     throw err;
   }
   return data;
@@ -35,7 +35,7 @@ export const api = {
   payerPay: (body) => req('/bff/payer/pay', { method: 'POST', body: JSON.stringify(body) }),
 };
 
-// Moedas → casas decimais (minor units). Aberto por design: default 2.
+// Currency → decimal places (minor units). Open by design: defaults to 2.
 const DECIMALS = { USD: 2, JPY: 0, USDC: 6, BTC: 8, ETH: 18, SOL: 9, XRP: 6 };
 
 export function formatAmount(minor, currency) {
@@ -43,23 +43,23 @@ export function formatAmount(minor, currency) {
   const d = DECIMALS[currency] ?? 2;
   const v = minor / 10 ** d;
   const digits = Math.min(d, v < 1 && d > 2 ? 6 : 2);
-  return `${v.toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) })} ${currency}`;
+  return `${v.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: Math.max(digits, 2) })} ${currency}`;
 }
 
-// Cores de status na paleta Eos: verde = positivo, dourado = destaque,
-// azul = concluído, vermelho #E5573B = alerta.
+// Status colors on the Eos palette: green = positive, gold = highlight,
+// blue = complete, red #E5573B = alert.
 export const STATUS_META = {
-  ACTIVE:            { label: 'Ativo',     cls: 'bg-[#EAF6DC] text-[#4C7A1F] border-[#C9E7A4]' },
-  PAYMENT_INITIATED: { label: 'Iniciado',  cls: 'bg-[#FFF4D1] text-[#8A6A00] border-[#FBE39B]' },
-  PAID:              { label: 'Pago',      cls: 'bg-[#D6E7FA] text-[#2F5496] border-[#B7D4F5]' },
-  CANCELLED:         { label: 'Cancelado', cls: 'bg-[#FBE5E0] text-[#B23E27] border-[#F3C4BA]' },
+  ACTIVE:            { label: 'Active',    cls: 'bg-[#EAF6DC] text-[#4C7A1F] border-[#C9E7A4]' },
+  PAYMENT_INITIATED: { label: 'Initiated', cls: 'bg-[#FFF4D1] text-[#8A6A00] border-[#FBE39B]' },
+  PAID:              { label: 'Paid',      cls: 'bg-[#D6E7FA] text-[#2F5496] border-[#B7D4F5]' },
+  CANCELLED:         { label: 'Cancelled', cls: 'bg-[#FBE5E0] text-[#B23E27] border-[#F3C4BA]' },
 };
 
-// Máquina de estados (STATE-MACHINE.md): só ofereça transições válidas.
+// State machine (STATE-MACHINE.md): only offer valid transitions.
 export function allowedActions(status) {
   switch (status) {
     case 'ACTIVE':            return ['PAYMENT_INITIATED', 'PAID', 'CANCELLED'];
     case 'PAYMENT_INITIATED': return ['ACTIVE', 'PAID', 'CANCELLED'];
-    default:                  return []; // PAID e CANCELLED são terminais
+    default:                  return []; // PAID and CANCELLED are terminal
   }
 }

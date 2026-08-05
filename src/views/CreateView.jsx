@@ -5,11 +5,11 @@ import { api } from '../api.js';
 import { ProblemBox } from '../components.jsx';
 
 const PRESET_LABELS = {
-  burger: 'Hamburgueria — gorjeta com presets',
-  waterbill: 'Conta de água — desconto + multa, 3 trilhos',
-  lab: 'Laboratório — invoice + USDC/Ethereum',
-  parking: 'Estacionamento — valor pequeno, USDC/Polygon',
-  donation: 'Doação — valor livre, só Bitcoin',
+  burger: 'Burger joint — tip with presets',
+  waterbill: 'Water bill — discount + late fee, 3 rails',
+  lab: 'Lab — invoice + USDC/Ethereum',
+  parking: 'Parking — small amount, USDC/Polygon',
+  donation: 'Donation — open amount, Bitcoin only',
 };
 
 export default function CreateView() {
@@ -48,24 +48,24 @@ export default function CreateView() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Criar QR code</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Create QR code</h1>
         <p className="mt-2 text-ink/55 max-w-2xl">
-          Escolha um cenário e ajuste o corpo da requisição — valores em <em>minor units</em>
-          (2450 = US$ 24,50). O servidor valida e responde com erros campo a campo (RFC-7807).
+          Pick a scenario and tweak the request body — amounts are in <em>minor units</em>
+          (2450 = $24.50). The server validates and responds with field-by-field errors (RFC-7807).
         </p>
       </motion.div>
 
       <div className="mt-8 grid lg:grid-cols-[300px_1fr] gap-6 items-start">
-        {/* cenários */}
+        {/* scenarios */}
         <div className="space-y-2.5">
           {presets.map((p) => (
             <button key={p.name} onClick={() => pick(p)}
               className={`card w-full text-left p-4 transition-all ${selected === p.name ? 'border-petrol-500 ring-2 ring-petrol-100' : 'card-hover'}`}>
               <div className="font-bold capitalize">{p.name}</div>
-              <div className="text-xs text-ink/50 mt-0.5">{PRESET_LABELS[p.name] || 'Cenário do playground'}</div>
+              <div className="text-xs text-ink/50 mt-0.5">{PRESET_LABELS[p.name] || 'Playground scenario'}</div>
             </button>
           ))}
-          {presets.length === 0 && <div className="text-sm text-ink/40">Sem presets — escreva o JSON ao lado.</div>}
+          {presets.length === 0 && <div className="text-sm text-ink/40">No presets — write the JSON on the right.</div>}
         </div>
 
         {/* editor */}
@@ -74,12 +74,12 @@ export default function CreateView() {
             <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40">
               POST /api/v1/payment-request
             </span>
-            {jsonErr && <span className="text-xs text-red-600 font-semibold">JSON inválido</span>}
+            {jsonErr && <span className="text-xs text-red-600 font-semibold">Invalid JSON</span>}
           </div>
           <textarea
             value={json} onChange={(e) => onChange(e.target.value)}
             spellCheck={false} rows={22}
-            placeholder="Escolha um cenário ao lado, ou cole aqui o corpo da requisição…"
+            placeholder="Pick a scenario on the left, or paste the request body here…"
             className={`w-full font-mono text-xs leading-relaxed rounded-xl border p-4 outline-none transition-colors resize-y bg-[#FCFCFA] ${
               jsonErr ? 'border-red-300 focus:border-red-500' : 'border-ink/15 focus:border-petrol-500'
             }`}
@@ -88,7 +88,7 @@ export default function CreateView() {
           <div className="mt-4 flex justify-end">
             <button onClick={submit} disabled={!json || !!jsonErr || busy}
               className="px-6 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98]">
-              {busy ? 'Criando…' : 'Criar QR code'}
+              {busy ? 'Creating…' : 'Create QR code'}
             </button>
           </div>
         </div>

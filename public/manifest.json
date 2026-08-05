@@ -1,12 +1,17 @@
 {
   "name": "X9 Console · Eos Loan",
   "short_name": "X9 Console",
-  "description": "Console Eos Loan para QR codes de pagamento ANSI X9.150",
+  "description": "Eos Loan console for ANSI X9.150 payment QR codes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#EEF2F8",
   "theme_color": "#2F5496",
   "icons": [
-    { "src": "/eos-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    {
+      "src": "/eos-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ]
 }

@@ -14,29 +14,29 @@ export default function PlacardView() {
   }, [id]);
 
   if (problem) return <div className="max-w-xl"><ProblemBox problem={problem} /></div>;
-  if (!qr) return <div className="text-ink/40 text-sm">Carregando…</div>;
+  if (!qr) return <div className="text-ink/40 text-sm">Loading…</div>;
 
   const amount = qr.bill?.amountDue ? formatAmount(qr.bill.amountDue.amount, qr.bill.amountDue.currency) : null;
   const rails = [...new Set((qr.paymentMethods || []).flatMap((m) => Object.keys(m.networks || {})))];
 
   return (
     <div>
-      {/* controles — somem na impressão */}
+      {/* controls — hidden when printing */}
       <div className="print:hidden flex items-center justify-between mb-8">
-        <Link to={`/qr/${id}`} className="text-xs font-bold text-ink/40 hover:text-ink transition-colors">← Voltar ao detalhe</Link>
+        <Link to={`/qr/${id}`} className="text-xs font-bold text-ink/40 hover:text-ink transition-colors">← Back to details</Link>
         <button onClick={() => window.print()}
           className="px-6 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 transition-all active:scale-[0.98]">
-          Imprimir plaquinha
+          Print placard
         </button>
       </div>
 
-      {/* a plaquinha — A5-ish, centrada */}
+      {/* the placard — A5-ish, centered */}
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
         className="placard mx-auto max-w-[420px] bg-white rounded-[28px] border border-ink/10 shadow-sm overflow-hidden print:shadow-none print:border-ink/20"
       >
-        {/* faixa superior — gradiente assinatura Eos */}
+        {/* top band — signature Eos gradient */}
         <div className="eos-band px-8 pt-7 pb-6 text-white">
           <span className="inline-flex items-center bg-white rounded-lg px-2.5 py-1.5">
             <img src="/eos-logo.svg" alt="Eos Loan" className="h-5 w-auto" />
@@ -47,7 +47,7 @@ export default function PlacardView() {
           )}
         </div>
 
-        {/* QR com a marca no centro (correção de erro H) */}
+        {/* QR with the brand mark centered (error correction H) */}
         <div className="px-8 py-7 flex flex-col items-center">
           <div className="rounded-2xl border-[3px] border-navy p-3.5">
             <QRImage emv={qr.qrCode} size={252} logo />
@@ -57,22 +57,22 @@ export default function PlacardView() {
             {amount ? (
               <div className="font-display text-4xl tracking-tight">{amount}</div>
             ) : (
-              <div className="font-display text-2xl text-ink/60">Você escolhe o valor</div>
+              <div className="font-display text-2xl text-ink/60">You choose the amount</div>
             )}
             {qr.bill?.tip?.allowed && (
-              <div className="mt-1 text-xs font-semibold text-ink/45">+ gorjeta opcional no app</div>
+              <div className="mt-1 text-xs font-semibold text-ink/45">+ optional tip in the app</div>
             )}
           </div>
 
           <p className="mt-5 text-center text-[13px] font-semibold text-ink/60 leading-snug max-w-[260px]">
-            Escaneie com o aplicativo do seu banco
+            Scan with your bank's app
             <span className="block text-[11px] font-medium text-ink/35 mt-1">
-              a câmera comum não abre este código — e é isso que o torna seguro
+              your regular camera won't open this code — and that's what keeps it secure
             </span>
           </p>
         </div>
 
-        {/* rodapé */}
+        {/* footer */}
         <div className="border-t border-dashed border-line px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex flex-wrap gap-1.5">

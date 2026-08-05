@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-// Paleta canônica Eos Loan (prototype :root) — não inventar tons fora daqui.
+// Canonical Eos Loan palette (prototype :root) — do not invent shades outside of it.
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {

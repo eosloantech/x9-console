@@ -1,5 +1,5 @@
-// X9 QRCode Console — BFF (app compartilhado entre server local e Vercel functions)
-// Escrita: sempre via API oficial. Listagem: MongoDB read-only (a API não tem lista).
+// X9 QRCode Console — BFF (app shared between the local server and Vercel functions)
+// Writes: always through the official API. Listing: MongoDB read-only (the API has no list endpoint).
 import express from 'express';
 import { MongoClient } from 'mongodb';
 import { readdir, readFile } from 'node:fs/promises';
@@ -8,13 +8,13 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const API = process.env.X9_API_URL || 'http://localhost:8080';
-// tolera espaços e aspas colados por engano na env var
+// tolerates stray spaces and quotes pasted into the env var
 const MONGO_URL = (process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/?replicaSet=x9-qrcode&directConnection=true')
   .trim().replace(/^["']|["']$/g, '');
 const PRESETS_DIR = process.env.PRESETS_DIR || path.resolve(__dirname, '../presets');
 const TOKEN = process.env.CONSOLE_TOKEN || null;
 
-// Conexão lazy + cacheada — obrigatório em serverless (reusa entre invocações).
+// Lazy + cached connection — required in serverless (reused across invocations).
 let clientPromise = null;
 function collection() {
   clientPromise ||= new MongoClient(MONGO_URL).connect();
@@ -24,17 +24,17 @@ function collection() {
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
-// Auth opcional: definir CONSOLE_TOKEN protege todo o /bff com Bearer token.
+// Optional auth: setting CONSOLE_TOKEN protects all of /bff with a Bearer token.
 app.use('/bff', (req, res, next) => {
   if (!TOKEN) return next();
   const got = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (got === TOKEN) return next();
-  res.status(401).json({ title: 'Não autorizado', detail: 'Informe o token de acesso do console.' });
+  res.status(401).json({ title: 'Unauthorized', detail: 'Provide the console access token.' });
 });
 
 // ---- helpers ---------------------------------------------------------------
 
-// UUID legacy do Java (Binary subtype 3): cada metade de 8 bytes vem little-endian.
+// Java legacy UUID (Binary subtype 3): each 8-byte half comes little-endian.
 function idFromBinary(bin) {
   const buf = Buffer.from(bin.buffer);
   if (buf.length !== 16) return buf.toString('hex').toUpperCase();
@@ -63,11 +63,11 @@ async function proxy(res, apiPath, init = {}) {
     const text = await r.text();
     res.status(r.status).type(r.headers.get('content-type') || 'application/json').send(text);
   } catch (e) {
-    res.status(502).json({ title: 'Backend indisponível', detail: String(e.message || e) });
+    res.status(502).json({ title: 'Backend unavailable', detail: String(e.message || e) });
   }
 }
 
-// ---- rotas -----------------------------------------------------------------
+// ---- routes ----------------------------------------------------------------
 
 app.get('/bff/qrcodes', async (_req, res) => {
   try {
@@ -96,7 +96,7 @@ app.get('/bff/qrcodes', async (_req, res) => {
     }));
     res.json({ items, total: items.length });
   } catch (e) {
-    res.status(500).json({ title: 'Erro ao ler o MongoDB', detail: String(e.message || e) });
+    res.status(500).json({ title: 'Failed to read MongoDB', detail: String(e.message || e) });
   }
 });
 
@@ -117,9 +117,9 @@ app.post('/bff/decode', (req, res) =>
 
 app.get('/bff/health', (_req, res) => proxy(res, '/actuator/health'));
 
-// ---- simulador do PAGADOR (lado Payer-PSP do X9.150) -----------------------
-// Assina via /api/v1/signature/generate (certificado demo do backend) — um
-// pagador real assinaria com o próprio certificado X9.
+// ---- PAYER simulator (the Payer-PSP side of X9.150) ------------------------
+// Signs via /api/v1/signature/generate (the backend's demo certificate) — a
+// real payer would sign with their own X9 certificate.
 
 async function signJws(body, correlationId) {
   const r = await fetch(`${API}/api/v1/signature/generate`, {
@@ -139,12 +139,12 @@ async function signJws(body, correlationId) {
 const b64urlJson = (seg) =>
   JSON.parse(Buffer.from(seg.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString());
 
-// Escaneou o QR: assina a chamada e busca o payload completo em /pub/api/v1/loc/{id}
+// QR scanned: signs the call and fetches the full payload from /pub/api/v1/loc/{id}
 app.post('/bff/payer/fetch', async (req, res) => {
   try {
     const emv = String(req.body?.emv || '').trim();
     const at = emv.indexOf('/loc/');
-    if (at < 0) return res.status(400).json({ title: 'EMV inválido', detail: 'não contém /loc/{id}' });
+    if (at < 0) return res.status(400).json({ title: 'Invalid EMV', detail: 'does not contain /loc/{id}' });
     const locId = emv.slice(at + 5, at + 5 + 32);
 
     const cid = crypto.randomUUID();
@@ -167,17 +167,17 @@ app.post('/bff/payer/fetch', async (req, res) => {
       payload: b64urlJson(payload),
     });
   } catch (e) {
-    res.status(502).json({ title: 'Falha ao buscar payload', detail: String(e.body || e.message || e) });
+    res.status(502).json({ title: 'Failed to fetch payload', detail: String(e.body || e.message || e) });
   }
 });
 
-// Confirma o pagamento: monta a PaymentNotificationData, assina e envia.
-// O backend registra a notificação e move o QR para PAYMENT_INITIATED.
+// Confirms the payment: builds the PaymentNotificationData, signs it and sends it.
+// The backend records the notification and moves the QR to PAYMENT_INITIATED.
 app.post('/bff/payer/pay', async (req, res) => {
   try {
     const { qrcodeId, amount, tipAmount, currency, network, payerInfo } = req.body || {};
     if (!qrcodeId || !amount || !currency || !network) {
-      return res.status(400).json({ title: 'Campos obrigatórios', detail: 'qrcodeId, amount, currency e network' });
+      return res.status(400).json({ title: 'Required fields', detail: 'qrcodeId, amount, currency and network' });
     }
     const notification = {
       payment: {
@@ -204,7 +204,7 @@ app.post('/bff/payer/pay', async (req, res) => {
     }
     res.json({ ok: true, transactionId: notification.payment.transactionId });
   } catch (e) {
-    res.status(502).json({ title: 'Falha ao notificar pagamento', detail: String(e.body || e.message || e) });
+    res.status(502).json({ title: 'Failed to notify payment', detail: String(e.body || e.message || e) });
   }
 });
 
@@ -217,7 +217,7 @@ app.get('/bff/presets', async (_req, res) => {
     })));
     res.json(presets);
   } catch (e) {
-    res.status(500).json({ title: 'Erro ao ler presets', detail: String(e.message || e) });
+    res.status(500).json({ title: 'Failed to read presets', detail: String(e.message || e) });
   }
 });
 

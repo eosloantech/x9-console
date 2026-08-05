@@ -1,6 +1,6 @@
-// Servidor local: BFF + UI estática buildada.
-// HTTP em :5177; se houver certs/ (autoassinado), HTTPS em :5178 — necessário
-// para a câmera funcionar em celulares na rede local (getUserMedia exige HTTPS).
+// Local server: BFF + built static UI.
+// HTTP on :5177; if certs/ exists (self-signed), HTTPS on :5178 — required
+// for the camera to work on phones over the local network (getUserMedia needs HTTPS).
 import express from 'express';
 import https from 'node:https';
 import { readFileSync, existsSync } from 'node:fs';
@@ -26,5 +26,5 @@ if (existsSync(path.join(certDir, 'cert.pem'))) {
     key: readFileSync(path.join(certDir, 'key.pem')),
     cert: readFileSync(path.join(certDir, 'cert.pem')),
   }, app).listen(HTTPS_PORT, HOST, () =>
-    console.log(`X9 Console (https, celular/câmera): https://<ip-da-rede>:${HTTPS_PORT}`));
+    console.log(`X9 Console (https, phone/camera): https://<lan-ip>:${HTTPS_PORT}`));
 }

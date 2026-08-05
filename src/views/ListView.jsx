@@ -35,28 +35,28 @@ export default function ListView() {
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-navy">
-          Seus QR codes<span className="text-gold">.</span>
+          Your QR codes<span className="text-gold">.</span>
         </h1>
         <p className="mt-2 text-ink/55 max-w-xl">
-          Cada QR referencia uma cobrança viva no backend — o valor e os meios de pagamento
-          ficam no payload assinado, nunca na imagem.
+          Each QR references a live payment request in the backend — the amount and the payment
+          methods live in the signed payload, never in the image.
         </p>
       </motion.div>
 
-      {/* filtros por status */}
+      {/* status filters */}
       <div className="mt-8 flex flex-wrap items-center gap-2">
         {['ALL', 'ACTIVE', 'PAYMENT_INITIATED', 'PAID', 'CANCELLED'].map((s) => (
           <button key={s} onClick={() => setFilter(s)}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold tracking-wide border transition-all ${
               filter === s ? 'bg-ink text-paper border-ink' : 'bg-white border-ink/15 text-ink/55 hover:border-ink/40'
             }`}>
-            {s === 'ALL' ? 'Todos' : STATUS_META[s].label}
+            {s === 'ALL' ? 'All' : STATUS_META[s].label}
             <span className="ml-1.5 opacity-60">{counts[s] || 0}</span>
           </button>
         ))}
         <input
           value={q} onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por nome, descrição ou id…"
+          placeholder="Search by name, description or id…"
           className="ml-auto w-64 px-4 py-2 rounded-xl border border-ink/15 bg-white text-sm outline-none focus:border-petrol-500 transition-colors"
         />
       </div>
@@ -65,9 +65,9 @@ export default function ListView() {
 
       {data && visible.length === 0 && (
         <div className="mt-16 text-center">
-          <p className="font-display text-2xl text-ink/40">Nenhum QR por aqui.</p>
+          <p className="font-display text-2xl text-ink/40">No QR codes here yet.</p>
           <Link to="/new" className="inline-block mt-4 px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 transition-colors">
-            Criar o primeiro QR
+            Create your first QR
           </Link>
         </div>
       )}
@@ -87,7 +87,7 @@ export default function ListView() {
               <div className="mt-4 flex items-end justify-between gap-4">
                 <div>
                   <div className="font-display text-2xl">
-                    {it.editableAmount ? <span className="text-ink/40 text-lg">valor livre</span> : formatAmount(it.amount, it.currency)}
+                    {it.editableAmount ? <span className="text-ink/40 text-lg">open amount</span> : formatAmount(it.amount, it.currency)}
                   </div>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {it.methods.flatMap((m) => m.networks.map((n) => (

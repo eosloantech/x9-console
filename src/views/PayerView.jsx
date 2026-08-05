@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
 import { ProblemBox } from '../components.jsx';
 
-/* Simulador do lado do PAGADOR: escaneia o QR (câmera via BarcodeDetector,
-   nativo do Chrome) ou recebe o EMV colado, busca o payload assinado como um
-   app de banco faria e envia a notificação de pagamento assinada. */
+/* PAYER-side simulator: scans the QR (camera via BarcodeDetector, native in
+   Chrome) or takes a pasted EMV, fetches the signed payload the way a banking
+   app would, and sends the signed payment notification. */
 
 export default function PayerView() {
   const [stage, setStage] = useState('scan');   // scan | review | done
@@ -14,7 +14,7 @@ export default function PayerView() {
   const [data, setData] = useState(null);       // { locId, payload, correlationEchoed }
   const [problem, setProblem] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [tipPct, setTipPct] = useState(null);   // permille (180 = 18.0%) ou null
+  const [tipPct, setTipPct] = useState(null);   // permille (180 = 18.0%) or null
   const [methodIdx, setMethodIdx] = useState(0);
   const [receipt, setReceipt] = useState(null);
 
@@ -30,7 +30,7 @@ export default function PayerView() {
   useEffect(() => () => stopCam(), []);
 
   const startCam = async () => {
-    // câmera exige contexto seguro (https ou localhost)
+    // camera requires a secure context (https or localhost)
     if (!navigator.mediaDevices?.getUserMedia) { setCamState('unsupported'); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -42,7 +42,7 @@ export default function PayerView() {
       const onHit = (raw) => { stopCam(); fetchPayload(raw); };
 
       if ('BarcodeDetector' in window) {
-        // Chrome/Android: detector nativo
+        // Chrome/Android: native detector
         const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
         const tick = async () => {
           if (!streamRef.current) return;
@@ -50,12 +50,12 @@ export default function PayerView() {
             const codes = await detector.detect(videoRef.current);
             const hit = codes.find((c) => c.rawValue?.includes('/loc/'));
             if (hit) return onHit(hit.rawValue);
-          } catch { /* frame ainda não pronto */ }
+          } catch { /* frame not ready yet */ }
           requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
       } else {
-        // Safari/iPhone: decodifica frames no canvas com jsQR
+        // Safari/iPhone: decodes frames on a canvas with jsQR
         const { default: jsQR } = await import('jsqr');
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -111,7 +111,7 @@ export default function PayerView() {
         ...(tipAmount ? { tipAmount } : {}),
         currency,
         network,
-        payerInfo: 'simulador do console',
+        payerInfo: 'console simulator',
       });
       setReceipt(r);
       setStage('done');
@@ -125,17 +125,17 @@ export default function PayerView() {
   return (
     <div className="max-w-md mx-auto">
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Pagar</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Pay</h1>
         <p className="mt-2 text-ink/55">
-          Simule o app do banco: escaneie o QR, revise a cobrança e pague. A confirmação
-          envia a notificação de pagamento assinada, que fica registrada no QR.
+          Simulate the banking app: scan the QR, review the payment request and pay. Confirming
+          sends the signed payment notification, which is recorded on the QR.
         </p>
       </motion.div>
 
       {problem && <div className="mt-5"><ProblemBox problem={problem} /></div>}
 
       <AnimatePresence mode="wait">
-        {/* ---------- 1. escanear ---------- */}
+        {/* ---------- 1. scan ---------- */}
         {stage === 'scan' && (
           <motion.div key="scan" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="card p-5 mt-6">
@@ -145,14 +145,14 @@ export default function PayerView() {
                 <div className="text-center px-6">
                   <div className="text-5xl" aria-hidden="true">▣</div>
                   <p className="mt-2 text-sm text-ink/50">
-                    {camState === 'unsupported' && 'Câmera indisponível (precisa de HTTPS) — cole o EMV abaixo.'}
-                    {camState === 'denied' && 'Câmera negada — cole o EMV abaixo.'}
-                    {camState === 'off' && 'Aponte a câmera para um QR X9.150'}
+                    {camState === 'unsupported' && 'Camera unavailable (requires HTTPS) — paste the EMV below.'}
+                    {camState === 'denied' && 'Camera denied — paste the EMV below.'}
+                    {camState === 'off' && 'Point the camera at an X9.150 QR'}
                   </p>
                   {camState === 'off' && (
                     <button onClick={startCam}
                       className="mt-4 px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 transition-colors">
-                      Abrir câmera
+                      Open camera
                     </button>
                   )}
                 </div>
@@ -162,32 +162,32 @@ export default function PayerView() {
               )}
             </div>
             {camState === 'on' && (
-              <button onClick={stopCam} className="mt-3 w-full text-xs font-bold text-ink/50 hover:text-ink">Fechar câmera</button>
+              <button onClick={stopCam} className="mt-3 w-full text-xs font-bold text-ink/50 hover:text-ink">Close camera</button>
             )}
             <div className="mt-4">
-              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-1.5">ou cole a string EMV</div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-1.5">or paste the EMV string</div>
               <textarea rows={3} value={emv} onChange={(e) => setEmv(e.target.value)} spellCheck={false}
                 placeholder="00020101021226…"
                 className="w-full font-mono text-xs leading-relaxed rounded-xl border border-line p-3 outline-none focus:border-petrol-500 bg-[#FCFDFF] resize-y" />
               <button onClick={() => fetchPayload(emv.trim())} disabled={!emv.trim() || busy}
                 className="mt-2 w-full px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 disabled:opacity-40 transition-colors">
-                {busy ? 'Buscando payload assinado…' : 'Ler cobrança'}
+                {busy ? 'Fetching signed payload…' : 'Read payment request'}
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* ---------- 2. revisar e pagar ---------- */}
+        {/* ---------- 2. review and pay ---------- */}
         {stage === 'review' && p && (
           <motion.div key="review" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="card overflow-hidden mt-6">
             <div className="eos-band px-6 py-5 text-white">
-              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Pagar para</div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/60">Pay to</div>
               <div className="font-display font-extrabold text-xl mt-0.5">{p.creditor?.name}</div>
               {bill?.description && <div className="text-white/65 text-sm">{bill.description}</div>}
               {data.correlationEchoed && (
                 <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold bg-white/15 rounded-full px-2 py-0.5">
-                  ✓ payload assinado verificado (correlationId ecoado)
+                  ✓ signed payload verified (correlationId echoed)
                 </div>
               )}
             </div>
@@ -195,11 +195,11 @@ export default function PayerView() {
             <div className="p-6 space-y-5">
               {bill?.tip?.allowed && (
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-2">Gorjeta</div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-2">Tip</div>
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setTipPct(null)}
                       className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition-all ${tipPct === null ? 'bg-navy text-white border-navy' : 'bg-white border-line text-ink/55'}`}>
-                      Sem gorjeta
+                      No tip
                     </button>
                     {(bill.tip.presets || []).map((t) => (
                       <button key={t} onClick={() => setTipPct(t)}
@@ -212,7 +212,7 @@ export default function PayerView() {
               )}
 
               <div>
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-2">Pagar com</div>
+                <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute mb-2">Pay with</div>
                 <div className="space-y-2">
                   {methods.map((m, i) => {
                     const net = Object.keys(m.networks || {})[0];
@@ -228,36 +228,36 @@ export default function PayerView() {
               </div>
 
               <div className="rounded-xl bg-petrol-50 border border-line px-4 py-3 flex items-baseline justify-between">
-                <span className="text-sm font-bold text-ink/60">Total{tipAmount ? ' (com gorjeta)' : ''}</span>
+                <span className="text-sm font-bold text-ink/60">Total{tipAmount ? ' (incl. tip)' : ''}</span>
                 <span className="font-display font-extrabold text-2xl text-navy">{formatAmount(total, currency)}</span>
               </div>
 
               <div className="flex gap-3">
-                <button onClick={reset} className="px-4 py-2.5 rounded-xl text-sm font-bold text-ink/50 hover:bg-ink/5">Cancelar</button>
+                <button onClick={reset} className="px-4 py-2.5 rounded-xl text-sm font-bold text-ink/50 hover:bg-ink/5">Cancel</button>
                 <button onClick={pay} disabled={busy}
                   className="flex-1 px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 disabled:opacity-40 transition-all active:scale-[0.99]">
-                  {busy ? 'Enviando notificação assinada…' : `Pagar ${formatAmount(total, currency)}`}
+                  {busy ? 'Sending signed notification…' : `Pay ${formatAmount(total, currency)}`}
                 </button>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ---------- 3. recibo ---------- */}
+        {/* ---------- 3. receipt ---------- */}
         {stage === 'done' && (
           <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
             className="card p-8 mt-6 text-center">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}
               className="mx-auto w-16 h-16 rounded-full bg-[#EAF6DC] text-[#4C7A1F] flex items-center justify-center text-3xl">✓</motion.div>
-            <h2 className="font-display font-extrabold text-2xl text-navy mt-4">Pagamento notificado</h2>
+            <h2 className="font-display font-extrabold text-2xl text-navy mt-4">Payment notified</h2>
             <p className="text-sm text-ink/55 mt-1">
-              A notificação assinada foi aceita e registrada no QR (a revisão sobe).
-              O lojista vê o pagamento no console e confirma o crédito marcando <b>Pago</b>.
+              The signed notification was accepted and recorded on the QR (the revision bumps).
+              The merchant sees the payment in the console and confirms the credit by marking it <b>Paid</b>.
             </p>
             <div className="mt-4 font-mono text-xs text-mute break-all">{receipt?.transactionId}</div>
             <div className="mt-6 flex gap-3 justify-center">
-              <button onClick={reset} className="px-5 py-2.5 rounded-xl border border-line text-sm font-bold text-ink/60 hover:border-petrol-300">Pagar outro</button>
-              <Link to="/" className="px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700">Ver no console</Link>
+              <button onClick={reset} className="px-5 py-2.5 rounded-xl border border-line text-sm font-bold text-ink/60 hover:border-petrol-300">Pay another</button>
+              <Link to="/" className="px-5 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700">View in console</Link>
             </div>
           </motion.div>
         )}

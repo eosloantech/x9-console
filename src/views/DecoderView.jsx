@@ -21,10 +21,10 @@ export default function DecoderView() {
   return (
     <div>
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">Decoder EMV</h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight text-navy">EMV Decoder</h1>
         <p className="mt-2 text-ink/55 max-w-2xl">
-          Cole uma string EMV e o backend a decodifica — se o QR existir nesta base,
-          volta a cobrança completa.
+          Paste an EMV string and the backend decodes it — if the QR exists in this database,
+          the full payment request comes back.
         </p>
       </motion.div>
 
@@ -42,7 +42,7 @@ export default function DecoderView() {
             {emv.trim() && <QRImage emv={emv.trim()} size={96} className="border border-ink/10" />}
             <button onClick={decode} disabled={!emv.trim() || busy}
               className="ml-auto px-6 py-2.5 rounded-xl bg-petrol-600 text-white text-sm font-bold hover:bg-petrol-700 disabled:opacity-40 transition-all active:scale-[0.98]">
-              {busy ? 'Decodificando…' : 'Decodificar'}
+              {busy ? 'Decoding…' : 'Decode'}
             </button>
           </div>
           {problem && <div className="mt-4"><ProblemBox problem={problem} /></div>}
@@ -50,7 +50,7 @@ export default function DecoderView() {
 
         {result && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="card p-5">
-            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40 mb-2">Resultado</div>
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink/40 mb-2">Result</div>
             <pre className="font-mono text-xs leading-relaxed overflow-x-auto bg-[#FCFCFA] border border-ink/10 rounded-xl p-4 max-h-[560px] overflow-y-auto">
               {JSON.stringify(result, null, 2)}
             </pre>

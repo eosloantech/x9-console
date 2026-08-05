@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { STATUS_META } from './api.js';
 
-/* ---------- QR renderizado no browser a partir do EMV ----------
-   Com `logo`, sobe a correção de erro para H (30%) e centra a marca Eos —
-   o QR continua legível porque a área coberta fica bem abaixo da redundância. */
+/* ---------- QR rendered in the browser from the EMV string ----------
+   With `logo`, error correction goes up to H (30%) and the Eos mark is centered —
+   the QR stays scannable because the covered area is well below the redundancy. */
 export function QRImage({ emv, size = 220, logo = false, className = '' }) {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -16,7 +16,7 @@ export function QRImage({ emv, size = 220, logo = false, className = '' }) {
     }
   }, [emv, size, logo]);
   if (!emv) return null;
-  const canvas = <canvas ref={canvasRef} className={`rounded-xl ${className}`} aria-label="QR code de pagamento" />;
+  const canvas = <canvas ref={canvasRef} className={`rounded-xl ${className}`} aria-label="Payment QR code" />;
   if (!logo) return canvas;
   return (
     <div className="relative inline-block leading-none">
@@ -45,7 +45,7 @@ function triggerDownload(href, download) {
   document.body.appendChild(a); a.click(); a.remove();
 }
 
-/* ---------- badges e blocos ---------- */
+/* ---------- badges and blocks ---------- */
 export function StatusBadge({ status, size = 'sm' }) {
   const meta = STATUS_META[status] || { label: status, cls: 'bg-ink/5 text-ink/60 border-ink/10' };
   const pad = size === 'lg' ? 'px-3.5 py-1.5 text-sm' : 'px-2.5 py-0.5 text-xs';
@@ -57,7 +57,7 @@ export function StatusBadge({ status, size = 'sm' }) {
   );
 }
 
-export function CopyButton({ text, label = 'Copiar' }) {
+export function CopyButton({ text, label = 'Copy' }) {
   const [ok, setOk] = useState(false);
   return (
     <button
@@ -67,7 +67,7 @@ export function CopyButton({ text, label = 'Copiar' }) {
       }}
       className="text-xs font-semibold text-petrol-600 hover:text-petrol-800 transition-colors"
     >
-      {ok ? 'Copiado ✓' : label}
+      {ok ? 'Copied ✓' : label}
     </button>
   );
 }
@@ -85,7 +85,7 @@ export function ProblemBox({ problem }) {
   if (!problem) return null;
   return (
     <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      <div className="font-bold">{problem.title || 'Erro'}</div>
+      <div className="font-bold">{problem.title || 'Error'}</div>
       {problem.detail && <div className="mt-1">{problem.detail}</div>}
       {Array.isArray(problem.violations) && (
         <ul className="mt-2 space-y-1 font-mono text-xs">
@@ -98,7 +98,7 @@ export function ProblemBox({ problem }) {
   );
 }
 
-/* ---------- motivo geométrico de módulos QR (emotion graphic) ---------- */
+/* ---------- geometric QR-module motif (emotion graphic) ---------- */
 export function QRMotif({ className = '' }) {
   const cells = [
     [0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2],  // finder pattern
