@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
 import { ProblemBox } from '../components.jsx';
@@ -42,6 +42,7 @@ function WalletIcon({ channel }) {
 }
 
 export default function PayerView() {
+  const { id: linkedId } = useParams();
   const [stage, setStage] = useState('scan');   // scan | review | done
   const [emv, setEmv] = useState('');
   const [data, setData] = useState(null);       // { locId, payload, correlationEchoed }
@@ -61,6 +62,22 @@ export default function PayerView() {
     setCamState('off');
   };
   useEffect(() => () => stopCam(), []);
+
+  // Shared payment link (/pay/:id): fetch the QR and jump straight to review.
+  useEffect(() => {
+    if (!linkedId) return;
+    (async () => {
+      setBusy(true); setProblem(null);
+      try {
+        const qr = await api.get(linkedId);
+        await fetchPayload(qr.qrCode);
+      } catch (e) {
+        setProblem(e.problem || { title: e.message });
+        setBusy(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedId]);
 
   const startCam = async () => {
     // camera requires a secure context (https or localhost)
@@ -197,7 +214,14 @@ export default function PayerView() {
 
       <AnimatePresence mode="wait">
         {/* ---------- 1. scan ---------- */}
-        {stage === 'scan' && (
+        {stage === 'scan' && linkedId && !problem && (
+          <motion.div key="link" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+            className="card p-10 mt-6 text-center">
+            <QrCode className="w-12 h-12 mx-auto text-navy/30 animate-pulse" aria-hidden="true" />
+            <p className="mt-4 text-sm font-semibold text-ink/55">Opening the payment request…</p>
+          </motion.div>
+        )}
+        {stage === 'scan' && !linkedId && (
           <motion.div key="scan" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="card p-5 mt-6">
             <div className="rounded-xl overflow-hidden bg-navy/5 aspect-square flex items-center justify-center relative">

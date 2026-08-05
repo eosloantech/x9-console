@@ -186,6 +186,7 @@ export default function App() {
           <Route path="/qr/:id/placard" element={<PlacardView />} />
           <Route path="/decoder" element={<DecoderView />} />
           <Route path="/pay" element={<PayerView />} />
+          <Route path="/pay/:id" element={<PayerView />} />
           <Route path="/admin" element={<AdminView />} />
         </Routes>
       </main>
