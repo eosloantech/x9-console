@@ -41,7 +41,12 @@ export const api = {
   payerFetch: (emv) => req('/bff/payer/fetch', { method: 'POST', body: JSON.stringify({ emv }) }),
   payerPay: (body) => req('/bff/payer/pay', { method: 'POST', body: JSON.stringify(body) }),
   adminTesters: () => req('/bff/admin/testers'),
+  remove: (id) => req(`/bff/qrcodes/${id}`, { method: 'DELETE' }),
 };
+
+// Deletion is owner-only: the owner's email, or the admin token holder.
+export const OWNER_EMAIL = 'lucas@eosloan.com';
+export const isOwner = () => getEmail() === OWNER_EMAIL || !!getToken();
 
 // Currency → decimal places (minor units). Open by design: defaults to 2.
 const DECIMALS = { USD: 2, JPY: 0, USDC: 6, BTC: 8, ETH: 18, SOL: 9, XRP: 6 };

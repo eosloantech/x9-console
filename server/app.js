@@ -329,6 +329,30 @@ app.post('/bff/payer/pay', async (req, res) => {
   }
 });
 
+// ---- owner-only: delete a QR code -----------------------------------------
+// Deletion is reserved for the console owner (specific email) or the admin
+// token. The official API has no delete — this removes the stored document.
+const OWNER_EMAIL = (process.env.OWNER_EMAIL || 'lucas@eosloan.com').toLowerCase();
+
+app.delete('/bff/qrcodes/:id', async (req, res) => {
+  const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const isOwner = req.consoleEmail === OWNER_EMAIL || (TOKEN && bearer === TOKEN);
+  if (!isOwner) {
+    return res.status(403).json({ title: 'Owner only', detail: 'Only the console owner can delete QR codes.' });
+  }
+  const id = req.params.id;
+  if (!/^[0-9A-F]{32}$/.test(id)) {
+    return res.status(400).json({ title: 'Invalid id' });
+  }
+  try {
+    const r = await (await collection()).deleteOne({ _id: binaryFromId(id) });
+    if (!r.deletedCount) return res.status(404).json({ title: 'Not found' });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ title: 'Failed to delete', detail: String(e.message || e) });
+  }
+});
+
 // ---- admin: tester registry (console admin token ONLY — email users get 403)
 app.get('/bff/admin/testers', async (req, res) => {
   const bearer = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');

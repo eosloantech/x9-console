@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
+import { Utensils, CircleParking, Droplets, FlaskConical, Cloud, HeartHandshake, FileText, ChevronDown } from 'lucide-react';
 import { ProblemBox } from '../components.jsx';
 
 // Scenario presentation: display name + one-line pitch, keyed by preset file name.
 const SCENARIOS = {
-  burger:        { name: 'Restaurant',     desc: 'Dine-in bill with tip presets',     icon: '🍽️', order: 1 },
-  parking:       { name: 'Parking',        desc: 'Small ticket, USDC on Polygon',     icon: '🅿️', order: 2 },
-  waterbill:     { name: 'Utility bill',   desc: 'Discount + late fee, 3 bank rails', icon: '💧', order: 3 },
-  lab:           { name: 'Medical lab',    desc: 'Invoice + USDC on Ethereum',        icon: '🧪', order: 4 },
-  cloudprovider: { name: 'Cloud provider', desc: 'B2B invoice',                       icon: '☁️', order: 5 },
-  donation:      { name: 'Donation',       desc: 'Open amount, Bitcoin only',         icon: '💛', order: 6 },
+  burger:        { name: 'Restaurant',     desc: 'Dine-in bill with tip presets',     icon: Utensils, order: 1 },
+  parking:       { name: 'Parking',        desc: 'Small ticket, USDC on Polygon',     icon: CircleParking, order: 2 },
+  waterbill:     { name: 'Utility bill',   desc: 'Discount + late fee, 3 bank rails', icon: Droplets, order: 3 },
+  lab:           { name: 'Medical lab',    desc: 'Invoice + USDC on Ethereum',        icon: FlaskConical, order: 4 },
+  cloudprovider: { name: 'Cloud provider', desc: 'B2B invoice',                       icon: Cloud, order: 5 },
+  donation:      { name: 'Donation',       desc: 'Open amount, Bitcoin only',         icon: HeartHandshake, order: 6 },
 };
 
 // Currency decimals for the amount input (minor units ↔ display).
@@ -107,11 +108,11 @@ export default function CreateView() {
       {/* scenario picker */}
       <div className="mt-7 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
         {presets.map((p) => {
-          const s = SCENARIOS[p.name] || { name: p.name, desc: 'Playground scenario', icon: '📄' };
+          const s = SCENARIOS[p.name] || { name: p.name, desc: 'Playground scenario', icon: FileText };
           return (
             <button key={p.name} onClick={() => pick(p)}
               className={`card text-left p-3.5 transition-all ${selected === p.name ? 'border-petrol-500 ring-2 ring-petrol-100' : 'card-hover'}`}>
-              <div className="text-xl leading-none" aria-hidden="true">{s.icon}</div>
+              <s.icon className="w-5 h-5 text-petrol-600" aria-hidden="true" />
               <div className="font-bold text-sm mt-2">{s.name}</div>
               <div className="text-[11px] text-mute leading-snug mt-0.5">{s.desc}</div>
             </button>
@@ -204,7 +205,7 @@ export default function CreateView() {
                 <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-mute">
                   Advanced · raw request (POST /api/v1/payment-request)
                 </span>
-                <span className={`text-mute transition-transform ${jsonOpen ? 'rotate-180' : ''}`}>⌄</span>
+                <ChevronDown className={`w-4 h-4 text-mute transition-transform ${jsonOpen ? 'rotate-180' : ''}`} />
               </button>
               <AnimatePresence>
                 {jsonOpen && (

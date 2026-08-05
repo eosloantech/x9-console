@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
 import { ProblemBox } from '../components.jsx';
+import { QrCode, Check, ShieldCheck } from 'lucide-react';
 
 /* PAYER-side simulator: scans the QR (camera via BarcodeDetector, native in
    Chrome) or takes a pasted EMV, fetches the signed payload the way a banking
@@ -203,7 +204,7 @@ export default function PayerView() {
               <video ref={videoRef} muted playsInline className={`w-full h-full object-cover ${camState === 'on' ? '' : 'hidden'}`} />
               {camState !== 'on' && (
                 <div className="text-center px-6">
-                  <div className="text-5xl" aria-hidden="true">▣</div>
+                  <QrCode className="w-14 h-14 mx-auto text-navy/30" aria-hidden="true" />
                   <p className="mt-2 text-sm text-ink/50">
                     {camState === 'unsupported' && 'Camera unavailable (requires HTTPS) — paste the EMV below.'}
                     {camState === 'denied' && 'Camera denied — paste the EMV below.'}
@@ -247,7 +248,7 @@ export default function PayerView() {
               {bill?.description && <div className="text-white/65 text-sm">{bill.description}</div>}
               {data.correlationEchoed && (
                 <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-bold bg-white/15 rounded-full px-2 py-0.5">
-                  ✓ signed payload verified (correlationId echoed)
+                  <ShieldCheck className="w-3.5 h-3.5" /> signed payload verified (correlationId echoed)
                 </div>
               )}
             </div>
@@ -325,7 +326,7 @@ export default function PayerView() {
           <motion.div key="done" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
             className="card p-8 mt-6 text-center">
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.1 }}
-              className="mx-auto w-16 h-16 rounded-full bg-[#EAF6DC] text-[#4C7A1F] flex items-center justify-center text-3xl">✓</motion.div>
+              className="mx-auto w-16 h-16 rounded-full bg-[#EAF6DC] text-[#4C7A1F] flex items-center justify-center"><Check className="w-8 h-8" strokeWidth={3} /></motion.div>
             <h2 className="font-display font-extrabold text-2xl text-navy mt-4">
               {receipt?.status === 'PAID' ? 'Payment completed' : 'Payment notified'}
             </h2>

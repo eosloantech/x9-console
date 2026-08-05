@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { api, formatAmount, allowedActions, STATUS_META } from '../api.js';
+import { api, formatAmount, allowedActions, isOwner, STATUS_META } from '../api.js';
+import { Trash2 } from 'lucide-react';
 import { QRImage, downloadQR, StatusBadge, CopyButton, Field, ProblemBox } from '../components.jsx';
 
 const NETWORKS = ['FedNow', 'RTP', 'ACH', 'Bitcoin', 'Ethereum', 'Solana', 'Polygon', 'Base', 'XRP', 'Arc'];
@@ -22,6 +23,8 @@ const ACTION_STYLES = {
 export default function DetailView() {
   const { id } = useParams();
   const { state } = useLocation();
+  const nav = useNavigate();
+  const [confirmDel, setConfirmDel] = useState(false);
   const [qr, setQr] = useState(null);
   const [problem, setProblem] = useState(null);
   const [actionProblem, setActionProblem] = useState(null);
@@ -33,6 +36,13 @@ export default function DetailView() {
     (d) => { setQr(d); setProblem(null); },
     (e) => setProblem(e.problem || { title: e.message }));
   useEffect(() => { load(); }, [id]);
+
+  const doDelete = async () => {
+    if (!confirmDel) { setConfirmDel(true); setTimeout(() => setConfirmDel(false), 4000); return; }
+    setBusy(true);
+    try { await api.remove(id); nav('/'); }
+    catch (e) { setActionProblem(e.problem || { title: e.message }); setBusy(false); setConfirmDel(false); }
+  };
 
   const doAction = async (status, extra = {}) => {
     setActionProblem(null); setBusy(true);
@@ -74,8 +84,15 @@ export default function DetailView() {
             <span className="text-sm text-ink/45">rev {qr.revision} · created {new Date(qr.createdAt).toLocaleString('en-US')}</span>
           </div>
         </div>
-        {actions.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {isOwner() && (
+            <button onClick={doDelete} disabled={busy}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 ${confirmDel ? 'bg-red-600 text-white' : 'bg-white border border-red-200 text-red-500 hover:bg-red-50'}`}>
+              <Trash2 className="w-4 h-4" /> {confirmDel ? 'Confirm delete' : 'Delete'}
+            </button>
+          )}
+          {actions.length > 0 && (
+            <>
             {actions.map((a) => (
               <button key={a} disabled={busy}
                 onClick={() => a === 'PAID' ? setPayModal(true) : doAction(a)}
@@ -83,8 +100,9 @@ export default function DetailView() {
                 {ACTION_LABELS[a]}
               </button>
             ))}
-          </div>
-        )}
+            </>
+          )}
+        </div>
       </div>
 
       {actionProblem && <div className="mt-4 max-w-2xl"><ProblemBox problem={actionProblem} /></div>}

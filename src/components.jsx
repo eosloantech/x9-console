@@ -67,7 +67,7 @@ export function CopyButton({ text, label = 'Copy' }) {
       }}
       className="text-xs font-semibold text-petrol-600 hover:text-petrol-800 transition-colors"
     >
-      {ok ? 'Copied ✓' : label}
+      {ok ? 'Copied' : label}
     </button>
   );
 }
