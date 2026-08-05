@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+/* mesh gradient — sutil, atrás de tudo */
+.mesh-bg {
+  background-color: #fafaf7;
+  background-image:
+    radial-gradient(at 8% 4%, rgba(22, 133, 105, 0.07) 0px, transparent 42%),
+    radial-gradient(at 94% 12%, rgba(217, 119, 6, 0.05) 0px, transparent 40%),
+    radial-gradient(at 55% 110%, rgba(14, 111, 92, 0.06) 0px, transparent 50%);
+}
+
+.card {
+  @apply bg-white border border-ink/10 rounded-2xl;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  @apply border-petrol-300;
+}
+
+.mono-box {
+  @apply font-mono text-xs bg-ink text-paper/90 rounded-xl p-4 break-all leading-relaxed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
