@@ -33,6 +33,38 @@ const navCls = ({ isActive }) =>
     isActive ? 'bg-ink text-paper' : 'text-ink/60 hover:text-ink hover:bg-ink/5'
   }`;
 
+/* barra inferior estilo app — só no mobile */
+const TABS = [
+  { to: '/', end: true, label: 'QR Codes', d: 'M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm10-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 4h2v2h-2v-2zm-4 0h2v2h-2v-2zm4-4h2v2h-2v-2z' },
+  { to: '/new', label: 'Criar', d: 'M12 5v14M5 12h14', stroke: true },
+  { to: '/pagar', label: 'Pagar', d: 'M2 8a2 2 0 012-2h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8zm2 2v2h16v-2H4z' },
+  { to: '/decoder', label: 'Decoder', d: 'M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3M7 12h10', stroke: true },
+];
+
+function BottomNav() {
+  return (
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur-md border-t border-line"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="grid grid-cols-4">
+        {TABS.map((t) => (
+          <NavLink key={t.to} to={t.to} end={t.end}
+            className={({ isActive }) =>
+              `flex flex-col items-center gap-1 py-2.5 text-[10px] font-bold transition-colors ${
+                isActive ? 'text-petrol-600' : 'text-mute'
+              }`}>
+            <svg viewBox="0 0 24 24" className="w-6 h-6"
+              fill={t.stroke ? 'none' : 'currentColor'}
+              stroke={t.stroke ? 'currentColor' : 'none'} strokeWidth={t.stroke ? 2 : 0} strokeLinecap="round">
+              <path d={t.d} />
+            </svg>
+            {t.label}
+          </NavLink>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 function TokenGate({ onOk }) {
   const [value, setValue] = useState('');
   const [bad, setBad] = useState(false);
@@ -93,7 +125,7 @@ export default function App() {
               <span className="block text-[10px] font-sans font-bold uppercase tracking-[0.18em] text-mute">Payment QR Codes · X9.150</span>
             </div>
           </Link>
-          <nav className="flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1">
             <NavLink to="/" end className={navCls}>QR Codes</NavLink>
             <NavLink to="/new" className={navCls}>Criar</NavLink>
             <NavLink to="/decoder" className={navCls}>Decoder</NavLink>
@@ -103,7 +135,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-10 pb-28 md:pb-10">
         <Routes>
           <Route path="/" element={<ListView />} />
           <Route path="/new" element={<CreateView />} />
@@ -114,9 +146,11 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-8 text-xs text-mute/80">
+      <footer className="relative z-10 max-w-6xl mx-auto px-6 pb-28 md:pb-8 text-xs text-mute/80">
         Eos Loan · NMLS #2744537 · Confidential — Console X9.150 · escrita via API oficial (:8080) · listagem lida do MongoDB
       </footer>
+
+      <BottomNav />
     </div>
   );
 }

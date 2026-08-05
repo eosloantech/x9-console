@@ -30,24 +30,51 @@ export default function PayerView() {
   useEffect(() => () => stopCam(), []);
 
   const startCam = async () => {
-    if (!('BarcodeDetector' in window)) { setCamState('unsupported'); return; }
+    // câmera exige contexto seguro (https ou localhost)
+    if (!navigator.mediaDevices?.getUserMedia) { setCamState('unsupported'); return; }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       streamRef.current = stream;
       videoRef.current.srcObject = stream;
       await videoRef.current.play();
       setCamState('on');
-      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
-      const tick = async () => {
-        if (!streamRef.current) return;
-        try {
-          const codes = await detector.detect(videoRef.current);
-          const hit = codes.find((c) => c.rawValue?.includes('/loc/'));
-          if (hit) { stopCam(); fetchPayload(hit.rawValue); return; }
-        } catch { /* frame ainda não pronto */ }
+
+      const onHit = (raw) => { stopCam(); fetchPayload(raw); };
+
+      if ('BarcodeDetector' in window) {
+        // Chrome/Android: detector nativo
+        const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        const tick = async () => {
+          if (!streamRef.current) return;
+          try {
+            const codes = await detector.detect(videoRef.current);
+            const hit = codes.find((c) => c.rawValue?.includes('/loc/'));
+            if (hit) return onHit(hit.rawValue);
+          } catch { /* frame ainda não pronto */ }
+          requestAnimationFrame(tick);
+        };
         requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
+      } else {
+        // Safari/iPhone: decodifica frames no canvas com jsQR
+        const { default: jsQR } = await import('jsqr');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const tick = () => {
+          if (!streamRef.current) return;
+          const v = videoRef.current;
+          if (v.videoWidth) {
+            const scale = Math.min(1, 640 / v.videoWidth);
+            canvas.width = v.videoWidth * scale;
+            canvas.height = v.videoHeight * scale;
+            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+            if (code?.data?.includes('/loc/')) return onHit(code.data);
+          }
+          setTimeout(() => requestAnimationFrame(tick), 120);
+        };
+        requestAnimationFrame(tick);
+      }
     } catch {
       setCamState('denied');
     }
@@ -118,7 +145,7 @@ export default function PayerView() {
                 <div className="text-center px-6">
                   <div className="text-5xl" aria-hidden="true">▣</div>
                   <p className="mt-2 text-sm text-ink/50">
-                    {camState === 'unsupported' && 'Este navegador não tem leitor de QR nativo — cole o EMV abaixo.'}
+                    {camState === 'unsupported' && 'Câmera indisponível (precisa de HTTPS) — cole o EMV abaixo.'}
                     {camState === 'denied' && 'Câmera negada — cole o EMV abaixo.'}
                     {camState === 'off' && 'Aponte a câmera para um QR X9.150'}
                   </p>
