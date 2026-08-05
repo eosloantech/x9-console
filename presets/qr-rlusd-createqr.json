@@ -1,0 +1,35 @@
+{
+  "validUntil": "2030-12-31T23:59:59Z",
+  "creditor": {
+    "name": "Pacific Trade Logistics",
+    "phone": "+14155550188",
+    "email": "billing@pacifictrade.example",
+    "address": {
+      "line1": "1200 Harbor Blvd",
+      "city": "San Francisco",
+      "state": "CA",
+      "postalCode": "94111",
+      "country": "US"
+    },
+    "MCC": "4214"
+  },
+  "bill": {
+    "description": "Invoice INV-2088 - freight services",
+    "paymentTiming": "immediate",
+    "amountDue": {
+      "amount": 150000000,
+      "currency": "RLUSD"
+    }
+  },
+  "paymentNotification": { "kind": "DEFAULT" },
+  "paymentMethods": [
+    {
+      "currency": "RLUSD",
+      "validUntil": "2030-12-31T23:59:59Z",
+      "amount": 150000000,
+      "networks": {
+        "XRP": { "walletAddress": "rEosDemo7kXNQx3XPzGqkeD4mBnU5xKwc" }
+      }
+    }
+  ]
+}

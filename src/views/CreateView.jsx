@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { api, formatAmount } from '../api.js';
-import { Utensils, CircleParking, Droplets, FlaskConical, Cloud, HeartHandshake, FileText, ChevronDown } from 'lucide-react';
+import { Utensils, CircleParking, Droplets, FlaskConical, Cloud, HeartHandshake, Globe, FileText, ChevronDown } from 'lucide-react';
 import { ProblemBox } from '../components.jsx';
 
 // Scenario presentation: display name + one-line pitch, keyed by preset file name.
@@ -13,10 +13,11 @@ const SCENARIOS = {
   lab:           { name: 'Medical lab',    desc: 'Invoice + USDC on Ethereum',        icon: FlaskConical, order: 4 },
   cloudprovider: { name: 'Cloud provider', desc: 'B2B invoice',                       icon: Cloud, order: 5 },
   donation:      { name: 'Donation',       desc: 'Open amount, Bitcoin only',         icon: HeartHandshake, order: 6 },
+  rlusd:         { name: 'Cross-border',   desc: 'RLUSD on the XRP Ledger',           icon: Globe, order: 7 },
 };
 
 // Currency decimals for the amount input (minor units ↔ display).
-const DECIMALS = { USD: 2, JPY: 0, USDC: 6, BTC: 8 };
+const DECIMALS = { USD: 2, JPY: 0, USDC: 6, RLUSD: 6, BTC: 8 };
 
 export default function CreateView() {
   const nav = useNavigate();

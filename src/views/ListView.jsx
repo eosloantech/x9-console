@@ -37,7 +37,7 @@ export default function ListView() {
         <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tight text-navy">
           Your QR codes<span className="text-gold">.</span>
         </h1>
-        <p className="mt-2 text-ink/55 max-w-xl">
+        <p className="hidden md:block mt-2 text-ink/55 max-w-xl">
           Each QR references a live payment request in the backend — the amount and the payment
           methods live in the signed payload, never in the image.
         </p>
@@ -104,6 +104,10 @@ export default function ListView() {
           </motion.div>
         ))}
       </motion.div>
+
+      <p className="md:hidden mt-8 text-center text-[12px] leading-relaxed text-mute px-4">
+        Each QR references a live payment request in the backend — the amount and the payment methods live in the signed payload, never in the image.
+      </p>
     </div>
   );
 }
